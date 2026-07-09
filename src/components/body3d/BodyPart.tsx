@@ -58,12 +58,10 @@ export default function BodyPart({ definition, selected, onSelect, onHover }: Bo
     mat.emissive.lerp(hovered || selected ? targetColor : new THREE.Color("#000000"), Math.min(1, delta * 10));
     mat.emissiveIntensity = selected ? 0.55 : hovered ? 0.4 : 0.15;
 
-    const targetScale = selected ? 1.04 : hovered ? 1.02 : 1;
+    const pulse = selected ? 1.04 : hovered ? 1.02 : 1;
+    const [bx, by, bz] = definition.scale ?? [1, 1, 1];
     if (meshRef.current) {
-      meshRef.current.scale.lerp(
-        new THREE.Vector3(targetScale, targetScale, targetScale),
-        Math.min(1, delta * 12)
-      );
+      meshRef.current.scale.lerp(new THREE.Vector3(bx * pulse, by * pulse, bz * pulse), Math.min(1, delta * 12));
     }
   });
 
@@ -93,6 +91,7 @@ export default function BodyPart({ definition, selected, onSelect, onHover }: Bo
       material={material}
       position={definition.position}
       rotation={definition.rotation ?? [0, 0, 0]}
+      scale={definition.scale ?? [1, 1, 1]}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
       onClick={handleClick}

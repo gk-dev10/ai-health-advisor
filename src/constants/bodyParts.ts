@@ -1,15 +1,31 @@
 import type { BodyPartDefinition, PrimitiveGeometry } from "@/types/body";
 
+type Vec3 = [number, number, number];
+
 function def(
   id: string,
   name: string,
   geometry: PrimitiveGeometry,
   args: number[],
-  position: [number, number, number],
+  position: Vec3,
   group: BodyPartDefinition["group"],
-  rotation?: [number, number, number]
+  rotation?: Vec3,
+  scale?: Vec3
 ): BodyPartDefinition {
-  return { id, name, geometry, args, position, rotation, group };
+  return { id, name, geometry, args, position, rotation, scale, group };
+}
+
+function ellipsoid(
+  id: string,
+  name: string,
+  radius: number,
+  position: Vec3,
+  scale: Vec3,
+  group: BodyPartDefinition["group"],
+  rotation?: Vec3,
+  segments: [number, number] = [14, 12]
+): BodyPartDefinition {
+  return def(id, name, "sphere", [radius, segments[0], segments[1]], position, group, rotation, scale);
 }
 
 function bilateral(
@@ -17,87 +33,103 @@ function bilateral(
   nameBase: string,
   geometry: PrimitiveGeometry,
   args: number[],
-  rightPosition: [number, number, number],
+  rightPosition: Vec3,
   group: BodyPartDefinition["group"],
-  rotation?: [number, number, number]
+  rotation?: Vec3,
+  scale?: Vec3
 ): BodyPartDefinition[] {
   const [x, y, z] = rightPosition;
-  const mirroredRot: [number, number, number] | undefined = rotation
-    ? [rotation[0], -rotation[1], -rotation[2]]
-    : undefined;
+  const mirroredRot: Vec3 | undefined = rotation ? [rotation[0], -rotation[1], -rotation[2]] : undefined;
   return [
-    def(`left-${idBase}`, `Left ${nameBase}`, geometry, args, [-x, y, z], group, mirroredRot),
-    def(`right-${idBase}`, `Right ${nameBase}`, geometry, args, [x, y, z], group, rotation),
+    def(`left-${idBase}`, `Left ${nameBase}`, geometry, args, [-x, y, z], group, mirroredRot, scale),
+    def(`right-${idBase}`, `Right ${nameBase}`, geometry, args, [x, y, z], group, rotation, scale),
   ];
+}
+
+function bilateralEllipsoid(
+  idBase: string,
+  nameBase: string,
+  radius: number,
+  rightPosition: Vec3,
+  scale: Vec3,
+  group: BodyPartDefinition["group"],
+  rotation?: Vec3,
+  segments: [number, number] = [14, 12]
+): BodyPartDefinition[] {
+  return bilateral(idBase, nameBase, "sphere", [radius, segments[0], segments[1]], rightPosition, group, rotation, scale);
 }
 
 const parts: BodyPartDefinition[] = [];
 
 parts.push(
-  def("scalp", "Scalp", "sphere", [0.135, 16, 16], [0, 1.71, -0.01], "head"),
-  def("crown-of-head", "Crown of Head", "sphere", [0.07, 12, 12], [0, 1.79, 0], "head"),
-  def("forehead", "Forehead", "sphere", [0.09, 12, 12], [0, 1.68, 0.11], "head"),
-  def("back-of-head", "Back of Head", "sphere", [0.1, 12, 12], [0, 1.68, -0.12], "head"),
-  def("occipital-region", "Occipital Region", "sphere", [0.06, 10, 10], [0, 1.62, -0.13], "head"),
-  def("bridge-of-nose", "Bridge of Nose", "box", [0.03, 0.06, 0.04], [0, 1.63, 0.15], "head"),
-  def("chin", "Chin", "sphere", [0.045, 10, 10], [0, 1.53, 0.13], "head"),
-  def("upper-jaw", "Upper Jaw", "box", [0.14, 0.04, 0.1], [0, 1.575, 0.1], "head"),
-  def("lower-jaw", "Lower Jaw", "box", [0.13, 0.04, 0.1], [0, 1.545, 0.1], "head")
+  ellipsoid("scalp", "Scalp", 0.135, [0, 1.71, -0.01], [1, 1.05, 1.05], "head"),
+  ellipsoid("crown-of-head", "Crown of Head", 0.075, [0, 1.79, 0], [1.1, 0.8, 1.1], "head"),
+  ellipsoid("forehead", "Forehead", 0.095, [0, 1.68, 0.1], [1.15, 0.85, 0.9], "head"),
+  ellipsoid("back-of-head", "Back of Head", 0.1, [0, 1.68, -0.12], [1, 1, 0.9], "head"),
+  ellipsoid("occipital-region", "Occipital Region", 0.065, [0, 1.62, -0.13], [1.1, 0.9, 0.8], "head"),
+  ellipsoid("bridge-of-nose", "Bridge of Nose", 0.022, [0, 1.635, 0.155], [0.8, 1.6, 1], "head"),
+  ellipsoid("chin", "Chin", 0.045, [0, 1.53, 0.13], [1.1, 0.9, 1], "head"),
+  ellipsoid("upper-jaw", "Upper Jaw", 0.065, [0, 1.575, 0.095], [1.5, 0.55, 1.15], "head"),
+  ellipsoid("lower-jaw", "Lower Jaw", 0.06, [0, 1.545, 0.09], [1.4, 0.5, 1.1], "head")
 );
-parts.push(...bilateral("temple", "Temple", "sphere", [0.035, 8, 8], [0.11, 1.67, 0.05], "head"));
-parts.push(...bilateral("eye", "Eye", "sphere", [0.025, 10, 10], [0.045, 1.655, 0.14], "head"));
-parts.push(...bilateral("eyelid", "Eyelid", "box", [0.05, 0.015, 0.02], [0.045, 1.67, 0.145], "head"));
-parts.push(...bilateral("nostril", "Nostril", "sphere", [0.015, 8, 8], [0.02, 1.615, 0.165], "head"));
-parts.push(...bilateral("cheek", "Cheek", "sphere", [0.05, 10, 10], [0.08, 1.6, 0.11], "head"));
-parts.push(...bilateral("ear", "Ear", "sphere", [0.035, 0.06, 0.02], [0.13, 1.63, -0.01], "head"));
+parts.push(...bilateralEllipsoid("temple", "Temple", 0.035, [0.11, 1.67, 0.05], [1, 1.2, 0.9], "head"));
+parts.push(...bilateralEllipsoid("eye", "Eye", 0.025, [0.045, 1.655, 0.14], [1, 1, 1], "head", undefined, [10, 10]));
+parts.push(
+  ...bilateralEllipsoid("eyelid", "Eyelid", 0.026, [0.045, 1.669, 0.145], [1.5, 0.4, 0.9], "head", undefined, [8, 8])
+);
+parts.push(...bilateralEllipsoid("nostril", "Nostril", 0.015, [0.02, 1.615, 0.165], [1, 1, 1], "head", undefined, [8, 8]));
+parts.push(...bilateralEllipsoid("cheek", "Cheek", 0.055, [0.08, 1.6, 0.1], [1.1, 1, 0.8], "head"));
+parts.push(...bilateral("ear", "Ear", "capsule", [0.02, 0.045, 4, 8], [0.13, 1.63, -0.01], "head", [0, 0, Math.PI / 2]));
 
 parts.push(
-  def("front-neck", "Front Neck", "box", [0.09, 0.1, 0.05], [0, 1.46, 0.075], "neck"),
-  def("back-neck", "Back Neck", "box", [0.09, 0.1, 0.05], [0, 1.46, -0.075], "neck"),
-  def("throat", "Throat", "sphere", [0.03, 8, 8], [0, 1.45, 0.09], "neck"),
-  def("base-of-neck", "Base of Neck", "cylinder", [0.09, 0.1, 0.04, 12], [0, 1.415, 0], "neck"),
+  ellipsoid("front-neck", "Front Neck", 0.065, [0, 1.46, 0.06], [1, 1.2, 0.65], "neck"),
+  ellipsoid("back-neck", "Back Neck", 0.065, [0, 1.46, -0.06], [1, 1.2, 0.65], "neck"),
+  def("throat", "Throat", "sphere", [0.03, 10, 10], [0, 1.45, 0.09], "neck"),
+  def("base-of-neck", "Base of Neck", "cylinder", [0.09, 0.1, 0.04, 16], [0, 1.415, 0], "neck"),
   def("cervical-spine", "Cervical Spine", "capsule", [0.02, 0.14, 4, 8], [0, 1.46, -0.06], "spine")
 );
-parts.push(...bilateral("side-neck", "Side Neck", "box", [0.03, 0.1, 0.08], [0.09, 1.46, 0], "neck"));
+parts.push(...bilateralEllipsoid("side-neck", "Side Neck", 0.05, [0.085, 1.46, 0], [0.7, 1.2, 1.3], "neck"));
 
 parts.push(...bilateral("collarbone", "Collarbone", "capsule", [0.015, 0.14, 4, 8], [0.14, 1.415, 0.06], "shoulder", [0, 0, 0.25]));
-parts.push(...bilateral("front-shoulder", "Front Shoulder", "sphere", [0.075, 12, 12], [0.22, 1.4, 0.05], "shoulder"));
-parts.push(...bilateral("rear-shoulder", "Rear Shoulder", "sphere", [0.075, 12, 12], [0.22, 1.4, -0.05], "shoulder"));
-parts.push(...bilateral("shoulder-joint", "Shoulder Joint", "sphere", [0.065, 12, 12], [0.26, 1.38, 0], "shoulder"));
+parts.push(...bilateralEllipsoid("front-shoulder", "Front Shoulder", 0.075, [0.22, 1.4, 0.05], [1, 1, 1], "shoulder"));
+parts.push(...bilateralEllipsoid("rear-shoulder", "Rear Shoulder", 0.075, [0.22, 1.4, -0.05], [1, 1, 1], "shoulder"));
+parts.push(...bilateralEllipsoid("shoulder-joint", "Shoulder Joint", 0.065, [0.26, 1.38, 0], [1, 1, 1], "shoulder"));
 
 parts.push(
-  def("center-chest", "Center Chest", "box", [0.12, 0.1, 0.09], [0, 1.29, 0.14], "chest"),
-  def("upper-chest", "Upper Chest", "box", [0.28, 0.08, 0.1], [0, 1.35, 0.11], "chest"),
-  def("lower-chest", "Lower Chest", "box", [0.26, 0.08, 0.1], [0, 1.22, 0.1], "chest"),
+  ellipsoid("center-chest", "Center Chest", 0.1, [0, 1.29, 0.13], [1.2, 1.0, 0.9], "chest"),
+  ellipsoid("upper-chest", "Upper Chest", 0.15, [0, 1.35, 0.09], [1.85, 0.55, 0.75], "chest"),
+  ellipsoid("lower-chest", "Lower Chest", 0.14, [0, 1.22, 0.08], [1.85, 0.6, 0.8], "chest"),
   def("breastbone", "Breastbone", "capsule", [0.015, 0.16, 4, 8], [0, 1.28, 0.15], "chest")
 );
-parts.push(...bilateral("chest-side", "Chest", "sphere", [0.09, 12, 12], [0.14, 1.28, 0.1], "chest"));
-parts.push(...bilateral("rib-cage", "Rib Cage", "sphere", [0.1, 12, 12], [0.16, 1.22, 0.03], "chest"));
-parts.push(...bilateral("pectoral-region", "Pectoral Region", "sphere", [0.08, 10, 10], [0.11, 1.31, 0.13], "chest"));
+parts.push(...bilateralEllipsoid("chest-side", "Chest", 0.09, [0.14, 1.28, 0.1], [1, 1, 1], "chest"));
+parts.push(...bilateralEllipsoid("rib-cage", "Rib Cage", 0.1, [0.16, 1.22, 0.02], [1, 1.15, 1], "chest"));
+parts.push(...bilateralEllipsoid("pectoral-region", "Pectoral Region", 0.08, [0.11, 1.31, 0.12], [1.1, 1, 0.9], "chest"));
 
 parts.push(
-  def("upper-abdomen", "Upper Abdomen", "box", [0.22, 0.09, 0.09], [0, 1.12, 0.11], "abdomen"),
-  def("lower-abdomen", "Lower Abdomen", "box", [0.2, 0.09, 0.09], [0, 1.02, 0.11], "abdomen"),
-  def("navel-region", "Navel Region", "sphere", [0.02, 8, 8], [0, 1.06, 0.15], "abdomen")
+  ellipsoid("upper-abdomen", "Upper Abdomen", 0.13, [0, 1.12, 0.09], [1.55, 0.7, 0.75], "abdomen"),
+  ellipsoid("lower-abdomen", "Lower Abdomen", 0.12, [0, 1.02, 0.09], [1.5, 0.7, 0.75], "abdomen"),
+  ellipsoid("navel-region", "Navel Region", 0.02, [0, 1.06, 0.14], [1, 1, 0.6], "abdomen")
 );
-parts.push(...bilateral("upper-abdomen-side", "Upper Abdomen", "sphere", [0.06, 10, 10], [0.13, 1.12, 0.09], "abdomen"));
-parts.push(...bilateral("lower-abdomen-side", "Lower Abdomen", "sphere", [0.06, 10, 10], [0.12, 1.02, 0.09], "abdomen"));
+parts.push(...bilateralEllipsoid("upper-abdomen-side", "Upper Abdomen", 0.065, [0.13, 1.12, 0.08], [1, 1, 1], "abdomen"));
+parts.push(...bilateralEllipsoid("lower-abdomen-side", "Lower Abdomen", 0.065, [0.12, 1.02, 0.08], [1, 1, 1], "abdomen"));
 
 parts.push(
   def("upper-spine", "Upper Spine", "capsule", [0.025, 0.16, 4, 8], [0, 1.33, -0.11], "spine"),
-  def("between-shoulder-blades", "Between Shoulder Blades", "box", [0.1, 0.09, 0.06], [0, 1.34, -0.13], "upperBack"),
+  ellipsoid("between-shoulder-blades", "Between Shoulder Blades", 0.06, [0, 1.34, -0.13], [1.4, 1.1, 0.6], "upperBack"),
   def("thoracic-spine", "Thoracic Spine", "capsule", [0.025, 0.22, 4, 8], [0, 1.24, -0.12], "spine")
 );
-parts.push(...bilateral("upper-back-side", "Upper Back", "sphere", [0.09, 12, 12], [0.14, 1.31, -0.1], "upperBack"));
-parts.push(...bilateral("scapula", "Scapula", "box", [0.09, 0.11, 0.03], [0.11, 1.32, -0.12], "upperBack", [0, 0, 0.15]));
+parts.push(...bilateralEllipsoid("upper-back-side", "Upper Back", 0.09, [0.14, 1.31, -0.1], [1, 1, 1], "upperBack"));
+parts.push(
+  ...bilateralEllipsoid("scapula", "Scapula", 0.065, [0.12, 1.32, -0.11], [1.3, 1.5, 0.45], "upperBack", [0.1, 0, 0.2])
+);
 
 parts.push(
   def("lumbar-spine", "Lumbar Spine", "capsule", [0.025, 0.16, 4, 8], [0, 1.06, -0.12], "spine"),
-  def("center-lower-back", "Center Lower Back", "box", [0.1, 0.1, 0.06], [0, 1.0, -0.12], "lowerBack"),
-  def("sacrum", "Sacrum", "box", [0.09, 0.08, 0.05], [0, 0.9, -0.11], "lowerBack"),
+  ellipsoid("center-lower-back", "Center Lower Back", 0.065, [0, 1.0, -0.11], [1.3, 1.15, 0.7], "lowerBack"),
+  ellipsoid("sacrum", "Sacrum", 0.055, [0, 0.9, -0.1], [1.2, 1.0, 0.65], "lowerBack"),
   def("tailbone", "Tailbone", "sphere", [0.025, 8, 8], [0, 0.85, -0.1], "lowerBack")
 );
-parts.push(...bilateral("lower-back-side", "Lower Back", "sphere", [0.08, 12, 12], [0.11, 1.0, -0.1], "lowerBack"));
+parts.push(...bilateralEllipsoid("lower-back-side", "Lower Back", 0.08, [0.11, 1.0, -0.1], [1, 1, 1], "lowerBack"));
 
 parts.push(
   def("upper-thoracic-spine", "Upper Thoracic Spine", "capsule", [0.02, 0.08, 4, 8], [0, 1.34, -0.115], "spine"),
@@ -108,11 +140,11 @@ parts.push(
 );
 
 parts.push(
-  def("pelvis", "Pelvis", "box", [0.26, 0.14, 0.14], [0, 0.83, 0], "pelvis"),
-  def("pubic-region", "Pubic Region", "sphere", [0.045, 10, 10], [0, 0.76, 0.08], "pelvis")
+  ellipsoid("pelvis", "Pelvis", 0.14, [0, 0.83, 0], [1.35, 0.85, 0.95], "pelvis"),
+  ellipsoid("pubic-region", "Pubic Region", 0.045, [0, 0.76, 0.07], [1, 0.9, 0.9], "pelvis")
 );
-parts.push(...bilateral("groin", "Groin", "sphere", [0.045, 10, 10], [0.08, 0.76, 0.06], "pelvis"));
-parts.push(...bilateral("hip-joint", "Hip Joint", "sphere", [0.06, 12, 12], [0.15, 0.79, 0], "pelvis"));
+parts.push(...bilateralEllipsoid("groin", "Groin", 0.045, [0.08, 0.76, 0.05], [1, 1, 1], "pelvis"));
+parts.push(...bilateralEllipsoid("hip-joint", "Hip Joint", 0.06, [0.15, 0.79, 0], [1, 1, 1], "pelvis"));
 
 parts.push(
   ...bilateral("upper-arm-front", "Upper Arm Front", "capsule", [0.05, 0.18, 4, 8], [0.28, 1.2, 0.03], "arm", [0, 0, 0.06])
@@ -122,18 +154,22 @@ parts.push(
 );
 parts.push(...bilateral("bicep", "Bicep", "capsule", [0.052, 0.16, 4, 8], [0.285, 1.21, 0.035], "arm", [0, 0, 0.06]));
 parts.push(...bilateral("tricep", "Tricep", "capsule", [0.05, 0.16, 4, 8], [0.285, 1.21, -0.035], "arm", [0, 0, 0.06]));
-parts.push(...bilateral("elbow-inner", "Elbow Inner", "sphere", [0.045, 10, 10], [0.29, 1.03, 0.02], "arm"));
-parts.push(...bilateral("elbow-outer", "Elbow Outer", "sphere", [0.045, 10, 10], [0.29, 1.03, -0.02], "arm"));
+parts.push(...bilateralEllipsoid("elbow-inner", "Elbow Inner", 0.045, [0.29, 1.03, 0.02], [1, 1, 1], "arm"));
+parts.push(...bilateralEllipsoid("elbow-outer", "Elbow Outer", 0.045, [0.29, 1.03, -0.02], [1, 1, 1], "arm"));
 parts.push(
   ...bilateral("forearm-top", "Forearm Top", "capsule", [0.04, 0.17, 4, 8], [0.3, 0.9, 0.02], "arm", [0, 0, 0.04])
 );
 parts.push(
   ...bilateral("forearm-bottom", "Forearm Bottom", "capsule", [0.04, 0.17, 4, 8], [0.3, 0.9, -0.02], "arm", [0, 0, 0.04])
 );
-parts.push(...bilateral("wrist-front", "Wrist Front", "sphere", [0.032, 8, 8], [0.31, 0.79, 0.015], "arm"));
-parts.push(...bilateral("wrist-back", "Wrist Back", "sphere", [0.032, 8, 8], [0.31, 0.79, -0.015], "arm"));
-parts.push(...bilateral("palm", "Palm", "box", [0.045, 0.08, 0.02], [0.315, 0.72, 0.015], "hand"));
-parts.push(...bilateral("back-hand", "Back Hand", "box", [0.045, 0.08, 0.02], [0.315, 0.72, -0.015], "hand"));
+parts.push(...bilateralEllipsoid("wrist-front", "Wrist Front", 0.032, [0.31, 0.79, 0.015], [1, 1, 1], "arm", undefined, [8, 8]));
+parts.push(...bilateralEllipsoid("wrist-back", "Wrist Back", 0.032, [0.31, 0.79, -0.015], [1, 1, 1], "arm", undefined, [8, 8]));
+parts.push(
+  ...bilateral("palm", "Palm", "capsule", [0.028, 0.05, 4, 8], [0.315, 0.7, 0.015], "hand", [0, 0, 0], [1.3, 1, 0.4])
+);
+parts.push(
+  ...bilateral("back-hand", "Back Hand", "capsule", [0.028, 0.05, 4, 8], [0.315, 0.7, -0.015], "hand", [0, 0, 0], [1.3, 1, 0.4])
+);
 
 type FingerSpec = { idBase: string; name: string; xOffset: number; length: number; zOffset?: number };
 
@@ -152,7 +188,7 @@ for (const f of fingerSpecs) {
       f.name,
       "capsule",
       [0.011, f.length, 4, 6],
-      [0.315 + f.xOffset, 0.66 - f.length / 2, f.zOffset ?? 0.015],
+      [0.315 + f.xOffset, 0.645 - f.length / 2, f.zOffset ?? 0.015],
       "fingers"
     )
   );
@@ -164,24 +200,24 @@ parts.push(
 parts.push(
   ...bilateral("rear-thigh", "Rear Thigh", "capsule", [0.08, 0.24, 4, 8], [0.11, 0.68, -0.03], "leg", [0, 0, 0.03])
 );
-parts.push(...bilateral("inner-thigh", "Inner Thigh", "sphere", [0.06, 10, 10], [0.06, 0.6, 0], "leg"));
-parts.push(...bilateral("outer-thigh", "Outer Thigh", "sphere", [0.07, 10, 10], [0.16, 0.6, 0], "leg"));
-parts.push(...bilateral("knee-front", "Knee Front", "sphere", [0.06, 12, 12], [0.11, 0.45, 0.03], "leg"));
-parts.push(...bilateral("knee-back", "Knee Back", "sphere", [0.055, 12, 12], [0.11, 0.45, -0.03], "leg"));
-parts.push(...bilateral("knee-inner", "Knee Inner", "sphere", [0.045, 10, 10], [0.075, 0.45, 0], "leg"));
-parts.push(...bilateral("knee-outer", "Knee Outer", "sphere", [0.045, 10, 10], [0.14, 0.45, 0], "leg"));
+parts.push(...bilateralEllipsoid("inner-thigh", "Inner Thigh", 0.06, [0.06, 0.6, 0], [1, 1, 1], "leg"));
+parts.push(...bilateralEllipsoid("outer-thigh", "Outer Thigh", 0.07, [0.16, 0.6, 0], [1, 1, 1], "leg"));
+parts.push(...bilateralEllipsoid("knee-front", "Knee Front", 0.06, [0.11, 0.45, 0.03], [1, 1, 1], "leg"));
+parts.push(...bilateralEllipsoid("knee-back", "Knee Back", 0.055, [0.11, 0.45, -0.03], [1, 1, 1], "leg"));
+parts.push(...bilateralEllipsoid("knee-inner", "Knee Inner", 0.045, [0.075, 0.45, 0], [1, 1, 1], "leg"));
+parts.push(...bilateralEllipsoid("knee-outer", "Knee Outer", 0.045, [0.14, 0.45, 0], [1, 1, 1], "leg"));
 parts.push(
   ...bilateral("shin", "Shin", "capsule", [0.055, 0.24, 4, 8], [0.11, 0.28, 0.03], "leg", [0, 0, 0.02])
 );
 parts.push(
   ...bilateral("calf", "Calf", "capsule", [0.06, 0.24, 4, 8], [0.11, 0.28, -0.03], "leg", [0, 0, 0.02])
 );
-parts.push(...bilateral("ankle-inner", "Ankle Inner", "sphere", [0.035, 8, 8], [0.075, 0.09, 0], "leg"));
-parts.push(...bilateral("ankle-outer", "Ankle Outer", "sphere", [0.035, 8, 8], [0.14, 0.09, 0], "leg"));
+parts.push(...bilateralEllipsoid("ankle-inner", "Ankle Inner", 0.035, [0.075, 0.09, 0], [1, 1, 1], "leg", undefined, [8, 8]));
+parts.push(...bilateralEllipsoid("ankle-outer", "Ankle Outer", 0.035, [0.14, 0.09, 0], [1, 1, 1], "leg", undefined, [8, 8]));
 
-parts.push(...bilateral("heel", "Heel", "sphere", [0.05, 10, 10], [0.11, 0.04, -0.08], "foot"));
-parts.push(...bilateral("sole", "Sole", "box", [0.09, 0.03, 0.2], [0.11, 0.015, 0.04], "foot"));
-parts.push(...bilateral("top-foot", "Top Foot", "box", [0.08, 0.04, 0.18], [0.11, 0.05, 0.05], "foot"));
+parts.push(...bilateralEllipsoid("heel", "Heel", 0.05, [0.11, 0.04, -0.08], [1, 1, 1], "foot"));
+parts.push(...bilateralEllipsoid("sole", "Sole", 0.07, [0.11, 0.02, 0.04], [1.1, 0.35, 2.4], "foot"));
+parts.push(...bilateralEllipsoid("top-foot", "Top Foot", 0.065, [0.11, 0.055, 0.05], [1.0, 0.55, 2.2], "foot"));
 
 type ToeSpec = { idBase: string; name: string; xOffset: number; length: number };
 
