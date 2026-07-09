@@ -2,6 +2,7 @@
 
 import { Info } from "lucide-react";
 import type { SelectedBodyPart } from "@/types/body";
+import { SEVERITY_SCALE, SEVERITY_COLORS } from "@/constants/severityScale";
 import { SeverityCard } from "./SeverityCard";
 import { QueryInput } from "./QueryInput";
 import { AssessmentSummary } from "./AssessmentSummary";
@@ -26,6 +27,36 @@ export function AssessmentPanel({
 }: AssessmentPanelProps) {
   return (
     <div className="space-y-6">
+      <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+        <h3 className="mb-3 text-xs font-semibold text-foreground uppercase tracking-wider">
+          Severity Reference
+        </h3>
+        <div className="space-y-2">
+          {SEVERITY_SCALE.map((level) => {
+            const color = SEVERITY_COLORS[level.value];
+            return (
+              <div key={level.value} className="flex items-start gap-2.5">
+                <span
+                  className="mt-1 inline-block size-3 shrink-0 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                <div className="min-w-0">
+                  <span
+                    className="text-xs font-medium"
+                    style={{ color }}
+                  >
+                    {level.value}. {level.label}
+                  </span>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {level.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {selectedParts.length === 0 && (
         <div className="rounded-lg border border-border bg-card p-6 text-center shadow-sm">
           <p className="text-sm text-muted-foreground">

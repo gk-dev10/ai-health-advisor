@@ -43,7 +43,7 @@ export function QueryInput({ value, onChange }: QueryInputProps) {
         aria-describedby="query-hint query-counter"
       />
       <p id="query-hint" className="text-xs text-muted-foreground">
-        Minimum {MIN_LENGTH} characters required. Examples: &ldquo;Sharp pain
+        Minimum {MIN_LENGTH}  characters required. Examples: &ldquo;Sharp pain
         while climbing stairs.&rdquo; &ldquo;Burning sensation in lower
         back.&rdquo;
       </p>
