@@ -1,12 +1,12 @@
 import { Container } from "@/components/layout/Container";
-import { Card } from "@/components/ui/Card";
 import { Section } from "@/components/ui/Section";
+import BodyViewer from "@/components/body3d/BodyViewer";
 import { APP_DESCRIPTION } from "@/constants/app";
 
 export default function HomePage() {
   return (
     <>
-      <Section className="bg-gradient-to-b from-primary-light/50 to-background">
+      <Section className="bg-gradient-to-b from-primary-light/50 to-background pb-0">
         <Container>
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl">
@@ -19,18 +19,11 @@ export default function HomePage() {
         </Container>
       </Section>
 
-      <Section>
+      <Section className="pt-6">
         <Container>
-          <Card className="flex items-center justify-center py-24">
-            <div className="text-center">
-              <p className="text-lg font-medium text-muted-foreground">
-                Body Map Module Coming Next
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Interactive body map will be available in the next module.
-              </p>
-            </div>
-          </Card>
+          <div className="h-[70vh] min-h-[480px] w-full">
+            <BodyViewer />
+          </div>
         </Container>
       </Section>
     </>
