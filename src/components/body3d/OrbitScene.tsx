@@ -5,11 +5,12 @@ import HumanBody from "./HumanBody";
 
 interface OrbitSceneProps {
   selectedIds: Set<string>;
+  severities: Record<string, number>;
   onSelect: (id: string, name: string) => void;
   onHover: (id: string | null, name: string | null) => void;
 }
 
-export default function OrbitScene({ selectedIds, onSelect, onHover }: OrbitSceneProps) {
+export default function OrbitScene({ selectedIds, severities, onSelect, onHover }: OrbitSceneProps) {
   return (
     <>
       <ambientLight intensity={0.55} />
@@ -31,7 +32,7 @@ export default function OrbitScene({ selectedIds, onSelect, onHover }: OrbitScen
         <shadowMaterial opacity={0.18} />
       </mesh>
 
-      <HumanBody selectedIds={selectedIds} onSelect={onSelect} onHover={onHover} />
+      <HumanBody selectedIds={selectedIds} severities={severities} onSelect={onSelect} onHover={onHover} />
 
       <OrbitControls
         enableRotate

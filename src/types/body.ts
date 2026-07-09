@@ -37,6 +37,7 @@ export interface SelectedBodyPart {
 export interface BodyPartMeshProps {
   definition: BodyPartDefinition;
   selected: boolean;
+  severity?: number;
   onSelect: (id: string, name: string) => void;
   onHover: (id: string | null, name: string | null) => void;
 }

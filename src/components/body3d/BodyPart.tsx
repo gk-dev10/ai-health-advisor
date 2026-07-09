@@ -10,6 +10,14 @@ const COLOR_HOVER = new THREE.Color("#7fb2ff");
 const COLOR_SELECTED = new THREE.Color("#2563eb");
 const COLOR_SELECTED_HOVER = new THREE.Color("#1e3a8a");
 
+const SEVERITY_COLORS: Record<number, THREE.Color> = {
+  1: new THREE.Color("#a8e6cf"),
+  2: new THREE.Color("#4caf50"),
+  3: new THREE.Color("#ffeb3b"),
+  4: new THREE.Color("#ff9800"),
+  5: new THREE.Color("#f44336"),
+};
+
 function buildGeometry(geometry: BodyPartMeshProps["definition"]["geometry"], args: number[]) {
   switch (geometry) {
     case "sphere":
@@ -24,7 +32,7 @@ function buildGeometry(geometry: BodyPartMeshProps["definition"]["geometry"], ar
   }
 }
 
-export default function BodyPart({ definition, selected, onSelect, onHover }: BodyPartMeshProps) {
+export default function BodyPart({ definition, selected, severity, onSelect, onHover }: BodyPartMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -34,11 +42,15 @@ export default function BodyPart({ definition, selected, onSelect, onHover }: Bo
   );
 
   const targetColor = useMemo(() => {
+    if (selected && severity !== undefined) {
+      const c = SEVERITY_COLORS[severity];
+      return hovered ? c.clone().multiplyScalar(0.8) : c;
+    }
     if (selected && hovered) return COLOR_SELECTED_HOVER;
     if (selected) return COLOR_SELECTED;
     if (hovered) return COLOR_HOVER;
     return COLOR_DEFAULT;
-  }, [selected, hovered]);
+  }, [selected, hovered, severity]);
 
   const material = useMemo(
     () =>

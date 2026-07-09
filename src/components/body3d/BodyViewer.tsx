@@ -9,10 +9,11 @@ import type { SelectedBodyPart } from "@/types/body";
 
 export interface BodyViewerProps {
   onSelectionChange?: (selection: SelectedBodyPart[]) => void;
+  severities?: Record<string, number>;
   className?: string;
 }
 
-export default function BodyViewer({ onSelectionChange, className }: BodyViewerProps) {
+export default function BodyViewer({ onSelectionChange, severities = {}, className }: BodyViewerProps) {
   const { selectedParts, selectedIds, toggleSelection, clearSelection, hoveredName, setHovered } =
     useBodySelection();
 
@@ -58,7 +59,12 @@ export default function BodyViewer({ onSelectionChange, className }: BodyViewerP
         gl={{ antialias: true, powerPreference: "high-performance" }}
       >
         <Suspense fallback={null}>
-          <OrbitScene selectedIds={selectedIds} onSelect={handleSelect} onHover={setHovered} />
+          <OrbitScene
+            selectedIds={selectedIds}
+            severities={severities}
+            onSelect={handleSelect}
+            onHover={setHovered}
+          />
         </Suspense>
       </Canvas>
 
