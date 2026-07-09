@@ -23,8 +23,17 @@ export default function BodyViewer({ onSelectionChange, severities = {}, classNa
   const handleSelect = useCallback(
     (id: string, name: string) => {
       toggleSelection(id, name);
-      const exists = selectedParts.some((p) => p.id === id);
-      const next = exists ? selectedParts.filter((p) => p.id !== id) : [...selectedParts, { id, name }];
+      const existing = selectedParts.find((p) => p.id === id);
+      let next: SelectedBodyPart[];
+      if (!existing) {
+        next = [...selectedParts, { id, name, severity: 1 }];
+      } else if ((existing.severity ?? 1) >= 5) {
+        next = selectedParts.filter((p) => p.id !== id);
+      } else {
+        next = selectedParts.map((p) =>
+          p.id === id ? { ...p, severity: ((p.severity ?? 1) + 1) as 1 | 2 | 3 | 4 | 5 } : p
+        );
+      }
       onSelectionChange?.(next);
     },
     [selectedParts, toggleSelection, onSelectionChange]

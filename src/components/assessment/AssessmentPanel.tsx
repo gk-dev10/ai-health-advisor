@@ -1,5 +1,6 @@
 "use client";
 
+import { Info } from "lucide-react";
 import type { SelectedBodyPart } from "@/types/body";
 import { SeverityCard } from "./SeverityCard";
 import { QueryInput } from "./QueryInput";
@@ -8,9 +9,7 @@ import { Button } from "@/components/ui/Button";
 
 interface AssessmentPanelProps {
   selectedParts: SelectedBodyPart[];
-  severities: Record<string, number>;
   query: string;
-  onSeverityChange: (id: string, severity: number) => void;
   onQueryChange: (value: string) => void;
   onSubmit: () => void;
   isValid: boolean;
@@ -19,9 +18,7 @@ interface AssessmentPanelProps {
 
 export function AssessmentPanel({
   selectedParts,
-  severities,
   query,
-  onSeverityChange,
   onQueryChange,
   onSubmit,
   isValid,
@@ -32,24 +29,27 @@ export function AssessmentPanel({
       {selectedParts.length === 0 && (
         <div className="rounded-lg border border-border bg-card p-6 text-center shadow-sm">
           <p className="text-sm text-muted-foreground">
-            Select body regions on the 3D model to assign severity levels.
+            Tap a body region on the 3D model to select it and set its severity.
           </p>
         </div>
       )}
 
       {selectedParts.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 rounded-lg bg-primary-light/60 px-4 py-3">
+            <Info className="size-4 shrink-0 text-primary" />
+            <p className="text-xs text-primary-dark">
+              Tap a region on the 3D body to select it. Tap again to increase severity (1–5). Tap at maximum severity to deselect.
+            </p>
+          </div>
+
           <h3 className="text-sm font-semibold text-foreground">
-            Pain Severity
+            Pain Severity Map
           </h3>
-          <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+
+          <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
             {selectedParts.map((part) => (
-              <SeverityCard
-                key={part.id}
-                part={part}
-                severity={severities[part.id]}
-                onChange={onSeverityChange}
-              />
+              <SeverityCard key={part.id} part={part} />
             ))}
           </div>
         </div>
@@ -59,7 +59,6 @@ export function AssessmentPanel({
 
       <AssessmentSummary
         selectedParts={selectedParts}
-        severities={severities}
         query={query}
       />
 

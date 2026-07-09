@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/ui/Section";
 import BodyViewer from "@/components/body3d/BodyViewer";
@@ -11,15 +11,16 @@ import type { SelectedBodyPart } from "@/types/body";
 
 export default function HomePage() {
   const [selectedParts, setSelectedParts] = useState<SelectedBodyPart[]>([]);
-  const {
-    severities,
-    updateSeverity,
-    query,
-    setQuery,
-    buildPayload,
-    isValid,
-    errors,
-  } = useAssessment(selectedParts);
+  const { query, setQuery, buildPayload, isValid, errors } =
+    useAssessment(selectedParts);
+
+  const severities = useMemo(
+    () =>
+      Object.fromEntries(
+        selectedParts.map((p) => [p.id, p.severity ?? 1])
+      ),
+    [selectedParts]
+  );
 
   const handleSubmit = () => {
     const payload = buildPayload();
@@ -53,9 +54,7 @@ export default function HomePage() {
             <div className="lg:w-1/2">
               <AssessmentPanel
                 selectedParts={selectedParts}
-                severities={severities}
                 query={query}
-                onSeverityChange={updateSeverity}
                 onQueryChange={setQuery}
                 onSubmit={handleSubmit}
                 isValid={isValid}

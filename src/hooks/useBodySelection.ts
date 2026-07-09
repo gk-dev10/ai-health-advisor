@@ -14,6 +14,8 @@ export interface UseBodySelectionResult {
   setHovered: (id: string | null, name: string | null) => void;
 }
 
+const MAX_SEVERITY = 5;
+
 export function useBodySelection(): UseBodySelectionResult {
   const [selectedParts, setSelectedParts] = useState<SelectedBodyPart[]>([]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -25,11 +27,17 @@ export function useBodySelection(): UseBodySelectionResult {
 
   const toggleSelection = useCallback((id: string, name: string) => {
     setSelectedParts((prev) => {
-      const exists = prev.some((p) => p.id === id);
-      if (exists) {
+      const existing = prev.find((p) => p.id === id);
+      if (!existing) {
+        return [...prev, { id, name, severity: 1 }];
+      }
+      const current = existing.severity ?? 1;
+      if (current >= MAX_SEVERITY) {
         return prev.filter((p) => p.id !== id);
       }
-      return [...prev, { id, name }];
+      return prev.map((p) =>
+        p.id === id ? { ...p, severity: (current + 1) as 1 | 2 | 3 | 4 | 5 } : p
+      );
     });
   }, []);
 
