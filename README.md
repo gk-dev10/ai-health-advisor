@@ -56,6 +56,8 @@ The hackathon clinic intake workspace is available at `/triage` alongside the ex
 
 The intake API stores requests locally in SQLite at `backend/data/intakes.sqlite3` by default (override with `TRIAGE_DB_PATH`). Its endpoints are `POST /api/v1/intakes`, `GET /api/v1/intakes`, and `PATCH /api/v1/intakes/{id}/override`. AI classification failures still save the request with a same-day human-review fallback. Staff can review the recommendation and reason, then save a final disposition with a note. The existing assessment flow remains stateless.
 
+Read the [clinic intake safety note](docs/triage-safety-note.md) before the demo. Run the synthetic backend routing cases from `backend/` with `python -m unittest discover -s tests -v`; Gemini calls are mocked in these tests.
+
 ## Project structure
 
 ```text

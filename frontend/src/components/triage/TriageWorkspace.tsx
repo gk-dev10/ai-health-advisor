@@ -116,19 +116,19 @@ function IntakeQueueCard({
   record: IntakeRecord;
   onSaved: (record: IntakeRecord) => void;
 }) {
-  const [finalCategory, setFinalCategory] = useState(record.finalCategory);
-  const [reason, setReason] = useState(record.overrideReason ?? "");
+  const [draft, setDraft] = useState({
+    updatedAt: record.updatedAt,
+    finalCategory: record.finalCategory,
+    reason: record.overrideReason ?? "",
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const emergencyText = record.recommendation.action ?? record.finalAction;
+  const draftMatchesRecord = draft.updatedAt === record.updatedAt;
+  const finalCategory = draftMatchesRecord ? draft.finalCategory : record.finalCategory;
+  const reason = draftMatchesRecord ? draft.reason : record.overrideReason ?? "";
   const reasonId = `override-reason-${record.id}`;
   const categoryId = `final-category-${record.id}`;
-
-  useEffect(() => {
-    setFinalCategory(record.finalCategory);
-    setReason(record.overrideReason ?? "");
-  }, [record.finalCategory, record.overrideReason]);
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -140,6 +140,11 @@ function IntakeQueueCard({
       const updated = await saveIntakeOverride(record.id, {
         finalCategory,
         reason: reason.trim(),
+      });
+      setDraft({
+        updatedAt: updated.updatedAt,
+        finalCategory: updated.finalCategory,
+        reason: updated.overrideReason ?? reason.trim(),
       });
       onSaved(updated);
       setSaved(true);
@@ -222,7 +227,11 @@ function IntakeQueueCard({
             id={categoryId}
             value={finalCategory}
             onChange={(event) => {
-              setFinalCategory(event.target.value as RoutingCategory);
+              setDraft({
+                updatedAt: record.updatedAt,
+                finalCategory: event.target.value as RoutingCategory,
+                reason,
+              });
               setSaved(false);
             }}
             className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -246,7 +255,11 @@ function IntakeQueueCard({
             value={reason}
             maxLength={500}
             onChange={(event) => {
-              setReason(event.target.value);
+              setDraft({
+                updatedAt: record.updatedAt,
+                finalCategory,
+                reason: event.target.value,
+              });
               setSaved(false);
             }}
             required
@@ -271,7 +284,7 @@ function IntakeQueueCard({
 }
 
 export function TriageWorkspace() {
-  const [syntheticPatientId, setSyntheticPatientId] = useState("");
+  const [syntheticPatientId, setSyntheticPatientId] = useState("SYN-DEMO-001");
   const [symptomDescription, setSymptomDescription] = useState("");
   const [preferredAppointmentTime, setPreferredAppointmentTime] = useState("Next available");
   const [requesterUrgency, setRequesterUrgency] = useState<RequesterUrgency>("routine");
@@ -304,9 +317,26 @@ export function TriageWorkspace() {
   }, []);
 
   useEffect(() => {
-    setSyntheticPatientId(newSyntheticId());
-    void refreshQueue();
-  }, [refreshQueue]);
+    let isActive = true;
+    fetchIntakes()
+      .then((response) => {
+        if (isActive) setIntakes(response.intakes);
+      })
+      .catch((error: unknown) => {
+        if (!isActive) return;
+        setQueueError(
+          error instanceof Error
+            ? error.message
+            : "Could not load the intake queue. Please try again."
+        );
+      })
+      .finally(() => {
+        if (isActive) setIsLoadingQueue(false);
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const filteredIntakes = useMemo(() => {
     if (filter === "all") return intakes;

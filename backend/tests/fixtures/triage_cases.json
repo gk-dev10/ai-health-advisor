@@ -1,0 +1,212 @@
+[
+  {
+    "name": "emergency chest pain and breathing difficulty",
+    "request": {
+      "syntheticPatientId": "SYN-CASE01",
+      "symptomDescription": "I have severe chest pain and trouble breathing.",
+      "preferredAppointmentTime": "Today",
+      "requesterUrgency": "urgent"
+    },
+    "expectedCategory": "emergency_guidance",
+    "expectedSource": "team_policy",
+    "expectModelCall": false
+  },
+  {
+    "name": "emergency stroke-like signal",
+    "request": {
+      "syntheticPatientId": "SYN-CASE02",
+      "symptomDescription": "Sudden weakness on one side of my body.",
+      "preferredAppointmentTime": "Next available",
+      "requesterUrgency": "routine"
+    },
+    "expectedCategory": "emergency_guidance",
+    "expectedSource": "team_policy",
+    "expectModelCall": false
+  },
+  {
+    "name": "same-day policy cannot be downgraded by routine AI",
+    "request": {
+      "syntheticPatientId": "SYN-CASE03",
+      "symptomDescription": "Persistent fever and I feel very weak.",
+      "preferredAppointmentTime": "Tomorrow morning",
+      "requesterUrgency": "routine"
+    },
+    "model": {
+      "category": "routine_appointment",
+      "signalIds": ["no_policy_signal"],
+      "isClear": true
+    },
+    "expectedCategory": "same_day_human_review",
+    "expectedSource": "team_policy",
+    "expectModelCall": true
+  },
+  {
+    "name": "requester urgent status sets a same-day floor",
+    "request": {
+      "syntheticPatientId": "SYN-CASE04",
+      "symptomDescription": "Mild back pain after lifting a box.",
+      "preferredAppointmentTime": "Next available in three weeks",
+      "requesterUrgency": "urgent"
+    },
+    "model": {
+      "category": "routine_appointment",
+      "signalIds": ["no_policy_signal"],
+      "isClear": true
+    },
+    "expectedCategory": "same_day_human_review",
+    "expectedSource": "team_policy",
+    "expectModelCall": true
+  },
+  {
+    "name": "clear lower-risk request can be routine",
+    "request": {
+      "syntheticPatientId": "SYN-CASE05",
+      "symptomDescription": "Mild back soreness after gardening, now improving.",
+      "preferredAppointmentTime": "Next available",
+      "requesterUrgency": "routine"
+    },
+    "model": {
+      "category": "routine_appointment",
+      "signalIds": ["no_policy_signal"],
+      "isClear": true
+    },
+    "expectedCategory": "routine_appointment",
+    "expectedSource": "ai_assist",
+    "expectModelCall": true
+  },
+  {
+    "name": "AI recognizes a same-day concern",
+    "request": {
+      "syntheticPatientId": "SYN-CASE06",
+      "symptomDescription": "I have felt unusually weak since yesterday.",
+      "preferredAppointmentTime": "Tomorrow",
+      "requesterUrgency": "routine"
+    },
+    "model": {
+      "category": "same_day_human_review",
+      "signalIds": ["other_concerning_symptom"],
+      "isClear": true
+    },
+    "expectedCategory": "same_day_human_review",
+    "expectedSource": "ai_assist",
+    "expectModelCall": true
+  },
+  {
+    "name": "unclear description uses safe fallback",
+    "request": {
+      "syntheticPatientId": "SYN-CASE07",
+      "symptomDescription": "I am not sure how to explain it.",
+      "preferredAppointmentTime": "Any time",
+      "requesterUrgency": "routine"
+    },
+    "model": {
+      "category": "same_day_human_review",
+      "signalIds": ["unclear_description"],
+      "isClear": false
+    },
+    "expectedCategory": "same_day_human_review",
+    "expectedSource": "safe_fallback",
+    "expectModelCall": true
+  },
+  {
+    "name": "AI emergency suggestion directs emergency action",
+    "request": {
+      "syntheticPatientId": "SYN-CASE08",
+      "symptomDescription": "Sudden severe pain and I feel like I may pass out.",
+      "preferredAppointmentTime": "Today",
+      "requesterUrgency": "routine"
+    },
+    "model": {
+      "category": "emergency_guidance",
+      "signalIds": ["other_concerning_symptom"],
+      "isClear": false
+    },
+    "expectedCategory": "emergency_guidance",
+    "expectedSource": "ai_assist",
+    "expectModelCall": true
+  },
+  {
+    "name": "AI emergency signal cannot be downgraded by routine category",
+    "request": {
+      "syntheticPatientId": "SYN-CASE13",
+      "symptomDescription": "A synthetic description the model marked as an emergency signal.",
+      "preferredAppointmentTime": "Next available",
+      "requesterUrgency": "routine"
+    },
+    "model": {
+      "category": "routine_appointment",
+      "signalIds": ["severe_chest_pain"],
+      "isClear": true
+    },
+    "expectedCategory": "emergency_guidance",
+    "expectedSource": "ai_assist",
+    "expectModelCall": true
+  },
+  {
+    "name": "explicit denial does not trigger phrase-only emergency rule",
+    "request": {
+      "syntheticPatientId": "SYN-CASE09",
+      "symptomDescription": "No severe chest pain; only a mild headache.",
+      "preferredAppointmentTime": "Next available",
+      "requesterUrgency": "routine"
+    },
+    "model": {
+      "category": "routine_appointment",
+      "signalIds": ["no_policy_signal"],
+      "isClear": true
+    },
+    "expectedCategory": "routine_appointment",
+    "expectedSource": "ai_assist",
+    "expectModelCall": true
+  },
+  {
+    "name": "positive emergency signal after a denied signal still escalates",
+    "request": {
+      "syntheticPatientId": "SYN-CASE10",
+      "symptomDescription": "No severe chest pain, but difficulty breathing.",
+      "preferredAppointmentTime": "Tomorrow",
+      "requesterUrgency": "routine"
+    },
+    "expectedCategory": "emergency_guidance",
+    "expectedSource": "team_policy",
+    "expectModelCall": false
+  },
+  {
+    "name": "empty description uses same-day fallback",
+    "request": {
+      "syntheticPatientId": "SYN-CASE11",
+      "symptomDescription": "",
+      "preferredAppointmentTime": "Next available",
+      "requesterUrgency": "routine"
+    },
+    "expectedCategory": "same_day_human_review",
+    "expectedSource": "safe_fallback",
+    "expectModelCall": false
+  },
+  {
+    "name": "AI failure uses same-day fallback",
+    "request": {
+      "syntheticPatientId": "SYN-CASE12",
+      "symptomDescription": "I have a concern I would like reviewed.",
+      "preferredAppointmentTime": "Next available",
+      "requesterUrgency": "routine"
+    },
+    "modelFailure": true,
+    "expectedCategory": "same_day_human_review",
+    "expectedSource": "safe_fallback",
+    "expectModelCall": true
+  },
+  {
+    "name": "invalid model response uses same-day fallback",
+    "request": {
+      "syntheticPatientId": "SYN-CASE14",
+      "symptomDescription": "A synthetic request with an invalid model response.",
+      "preferredAppointmentTime": "Next available",
+      "requesterUrgency": "routine"
+    },
+    "modelInvalid": true,
+    "expectedCategory": "same_day_human_review",
+    "expectedSource": "safe_fallback",
+    "expectModelCall": true
+  }
+]
