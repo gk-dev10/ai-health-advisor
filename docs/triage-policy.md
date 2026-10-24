@@ -11,11 +11,11 @@ The prototype accepts a synthetic patient ID (`SYN-...`), symptom description (u
 
 | Category | Initial policy |
 | --- | --- |
-| Emergency guidance | Team emergency signals, or a clear Gemini emergency suggestion. Direct the requester to contact local emergency services immediately and not wait for a clinic appointment. |
+| Emergency guidance | Team emergency signals or a Gemini emergency suggestion. Direct the requester to contact local emergency services immediately and not wait for a clinic appointment. |
 | Same-day human review | Team same-day signals, requester-selected urgent status, an unclear/high-risk description, or Gemini failure, invalid output, or uncertainty. |
 | Routine appointment | Only when Gemini gives a clear routine suggestion and no policy or requester-urgency rule escalates the request. |
 
-Emergency takes precedence over all other routes. Same-day rules set a minimum route. A model suggestion cannot downgrade a deterministic policy match. The team policy signal or AI reason is displayed with the suggestion; fallbacks use a fixed explanation.
+Emergency takes precedence over all other routes. Same-day rules set a minimum route. A model suggestion cannot downgrade a deterministic policy match. Team rule matches and AI-selected signal IDs map to fixed, reviewed reason text; fallbacks use a fixed explanation.
 
 ## Initial team signals
 
@@ -23,10 +23,10 @@ Emergency policy signals are severe chest pain, difficulty or trouble breathing,
 
 Same-day policy signals include persistent fever together with marked weakness, other persistent symptoms, and worsening symptoms. Unclear or potentially high-risk descriptions are reviewed by clinic staff the same day unless an emergency route applies.
 
-Rules refer to current/recent reported symptoms. Explicit denials, historical mentions, hypothetical examples, and quoted instructions must not be treated as current symptoms solely because they contain a signal phrase. If context cannot be resolved safely, use same-day human review; do not invent or infer a diagnosis.
+Rules refer to current/recent reported symptoms. The phrase matcher suppresses matches with nearby common denial, history, or hypothetical cues. Gemini treats embedded instructions as untrusted input. If context cannot be resolved safely, use same-day human review; do not invent or infer a diagnosis.
 
 ## AI output and safety
 
-Gemini may return only a category, a short reason based on the request, and whether its classification is clear. It must not name a disease, diagnose, or recommend treatment. The backend validates this structure and applies team policy after receiving it. If the model is unavailable, invalid, or uncertain, use same-day human review unless a deterministic emergency signal applies.
+Gemini may return only a category, team-policy signal IDs, and whether its classification is clear. It must not return a free-text explanation, name a disease, diagnose, or recommend treatment. The backend validates this structure and maps signal IDs to fixed, reviewed reason text before applying team policy. If the model is unavailable, invalid, or uncertain, use same-day human review unless a deterministic emergency signal applies. Only symptom text and requester urgency are sent to Gemini; synthetic ID and appointment preference stay local.
 
 The prototype is for synthetic records only. The UI must make that restriction visible and explain that symptom text is sent to Gemini. Do not add location-specific emergency phone numbers without a clinic location supplied by the team; use “local emergency services.” Staff may change the recorded disposition and must provide an override reason, but an emergency instruction already shown to the requester remains visible.

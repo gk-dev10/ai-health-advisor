@@ -14,9 +14,19 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request, exc: RequestValidationError
     ) -> JSONResponse:
         # Avoid echoing symptom text in validation responses.
+        if request.url.path.endswith("/override"):
+            detail = "Provide a valid final category and a nonempty override reason."
+        elif request.method == "GET" and request.url.path.endswith("/intakes"):
+            detail = "The intake queue limit must be between 1 and 500."
+        elif request.url.path.endswith("/intakes"):
+            detail = "Check the synthetic ID, appointment preference, urgency selection, and field lengths."
+        elif "/intakes/" in request.url.path:
+            detail = "Check the intake request fields and try again."
+        else:
+            detail = "Check that you selected a body region and entered 10 to 2,000 characters."
         return JSONResponse(
             status_code=422,
-            content={"detail": "Check that you selected a body region and entered 10 to 2,000 characters."},
+            content={"detail": detail},
         )
 
     @app.exception_handler(Exception)

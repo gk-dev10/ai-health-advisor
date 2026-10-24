@@ -48,19 +48,22 @@ Open <http://localhost:3000>. The frontend defaults to `http://localhost:8000` f
 3. Review the data notice and consent before sending the selected regions and description to Gemini.
 4. The backend validates the request and returns structured, AI-generated guidance.
 
-The API requires `GEMINI_API_KEY`; its health endpoint remains available without a key, while assessment requests return a clear configuration error. AI output is educational, can be inaccurate, and is not a diagnosis or treatment plan. The app does not store assessments.
+The assessment endpoint requires `GEMINI_API_KEY`; its health endpoint remains available without a key. Clinic intake remains available without a key and uses the same-day human-review fallback when AI classification cannot run. AI output can be inaccurate and is not a diagnosis or treatment plan. The existing assessment flow does not store assessments.
 
 ## Clinic intake prototype
 
 The hackathon clinic intake workspace and its initial safety policy are being added alongside the existing body-map assessment. The prototype is limited to synthetic records. See [the clinic intake routing policy](docs/triage-policy.md) for the initial categories, policy signals, and safety behavior.
+
+The intake API stores requests locally in SQLite at `backend/data/intakes.sqlite3` by default (override with `TRIAGE_DB_PATH`). Its endpoints are `POST /api/v1/intakes`, `GET /api/v1/intakes`, and `PATCH /api/v1/intakes/{id}/override`. AI classification failures still save the request with a same-day human-review fallback. The existing assessment flow remains stateless.
 
 ## Project structure
 
 ```text
 backend/
   app/
-    core/       Settings and sanitized API error handling
-    routers/    Health and assessment endpoints
+    core/       Settings, triage policy, SQLite intake store, and sanitized API errors
+    routers/    Health, assessment, and clinic intake endpoints
+    schemas/    Intake request, routing, and response contracts
     main.py     FastAPI application and CORS setup
   requirements.txt
   pyproject.toml

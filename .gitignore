@@ -5,6 +5,7 @@
 **/coverage/
 **/.npm-cache/
 **/.pip-cache/
+backend/data/
 
 # Python environments and generated files
 **/.venv/

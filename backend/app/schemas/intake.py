@@ -4,7 +4,12 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.core.triage_policy import RequesterUrgency, RoutingCategory, RoutingSource
+from app.core.triage_policy import (
+    PolicySignalId,
+    RequesterUrgency,
+    RoutingCategory,
+    RoutingSource,
+)
 
 
 def _to_camel(value: str) -> str:
@@ -46,10 +51,10 @@ class IntakeSubmission(IntakeModel):
 
 
 class AIClassification(IntakeModel):
-    """Allowed Gemini output: route and plain-language reason, never diagnosis."""
+    """Allowed Gemini output uses policy signal IDs so no free text can name diseases."""
 
     category: RoutingCategory
-    reason: str = Field(min_length=1, max_length=280)
+    signal_ids: list[PolicySignalId] = Field(max_length=12)
     is_clear: bool
 
 
@@ -57,3 +62,28 @@ class RoutingSuggestion(IntakeModel):
     category: RoutingCategory
     reason: str = Field(min_length=1, max_length=400)
     source: RoutingSource
+    action: str | None = None
+
+
+class IntakeRecord(IntakeSubmission):
+    id: str
+    recommendation: RoutingSuggestion
+    final_category: RoutingCategory
+    final_action: str | None = None
+    override_reason: str | None = None
+    created_at: str
+    updated_at: str
+
+
+class IntakeQueueResponse(IntakeModel):
+    intakes: list[IntakeRecord]
+
+
+class StaffOverrideRequest(IntakeModel):
+    final_category: RoutingCategory
+    reason: str = Field(min_length=1, max_length=500)
+
+    @field_validator("reason", mode="before")
+    @classmethod
+    def trim_reason(cls, value: Any) -> Any:
+        return value.strip() if isinstance(value, str) else value
