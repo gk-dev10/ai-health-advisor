@@ -60,7 +60,7 @@ export function GuidedSymptomInterview({ value, onChange }: GuidedSymptomIntervi
           </div>
         ))}
         <p className="text-xs leading-relaxed text-muted-foreground sm:col-span-3">
-          These optional answers are added to your description for this request. They do not determine a diagnosis.
+          Optional answers are included with your description.
         </p>
       </div>
     </details>

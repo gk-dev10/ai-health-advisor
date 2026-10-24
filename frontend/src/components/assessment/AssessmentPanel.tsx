@@ -140,9 +140,6 @@ export function AssessmentPanel({
           <Download className="size-4" aria-hidden="true" />
           Download visit summary
         </Button>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Creates a text file on your device with your selected regions, description, optional interview answers, and any guidance received.
-        </p>
         {summaryExportStatus && <p role="status" className="text-xs text-emerald-800">{summaryExportStatus}</p>}
       </div>
 
@@ -154,8 +151,7 @@ export function AssessmentPanel({
           className="mt-0.5 size-4 shrink-0 accent-primary"
         />
         <span>
-          I understand that my selected body regions, symptom description, and any guided interview answers will be sent to
-          Google Gemini to generate this guidance. I will not include identifying details.
+          Selected body regions, description, and interview answers are sent to Google Gemini. Do not include identifying details.
         </span>
       </label>
 

@@ -39,15 +39,13 @@ export function QueryInput({ value, onChange }: QueryInputProps) {
         value={value}
         maxLength={MAX_LENGTH}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Describe your pain, symptoms, discomfort, or concerns..."
+        placeholder="Describe what you are feeling..."
         rows={5}
         className="w-full resize-y rounded-2xl border border-border bg-background px-4 py-3.5 text-sm leading-relaxed text-foreground shadow-inner shadow-foreground/[0.015] placeholder:text-muted-foreground/80 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none"
         aria-describedby="query-hint query-counter"
       />
       <p id="query-hint" className="text-xs text-muted-foreground">
-        Minimum {MIN_LENGTH}  characters required. Examples: &ldquo;Sharp pain
-        while climbing stairs.&rdquo; &ldquo;Burning sensation in lower
-        back.&rdquo;
+        Enter at least {MIN_LENGTH} characters.
       </p>
       {isUnderMin && charCount > 0 && (
         <p id="query-warning" className="text-xs text-amber-600">

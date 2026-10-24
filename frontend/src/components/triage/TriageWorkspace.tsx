@@ -290,9 +290,9 @@ function IntakeQueueCard({
 
 export function TriageWorkspace() {
   const [activeWorkspace, setActiveWorkspace] = useState<"intake" | "care">("intake");
-  const [syntheticPatientId, setSyntheticPatientId] = useState("SYN-DEMO-001");
+  const [syntheticPatientId, setSyntheticPatientId] = useState("");
   const [symptomDescription, setSymptomDescription] = useState("");
-  const [preferredAppointmentTime, setPreferredAppointmentTime] = useState("Next available");
+  const [preferredAppointmentTime, setPreferredAppointmentTime] = useState("");
   const [requesterUrgency, setRequesterUrgency] = useState<RequesterUrgency>("routine");
   const [hasSyntheticConfirmation, setHasSyntheticConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -323,6 +323,7 @@ export function TriageWorkspace() {
   }, []);
 
   useEffect(() => {
+    setSyntheticPatientId(newSyntheticId());
     let isActive = true;
     fetchIntakes()
       .then((response) => {
@@ -373,7 +374,7 @@ export function TriageWorkspace() {
       setIntakes((current) => [record, ...current.filter((item) => item.id !== record.id)]);
       setSyntheticPatientId(newSyntheticId());
       setSymptomDescription("");
-      setPreferredAppointmentTime("Next available");
+      setPreferredAppointmentTime("");
       setRequesterUrgency("routine");
       setHasSyntheticConfirmation(false);
     } catch (error) {
@@ -411,7 +412,7 @@ export function TriageWorkspace() {
         <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
         <p className="leading-relaxed">
           <span className="font-bold">Possible immediate danger? </span>
-          Contact local emergency services now. Do not wait for AI classification, this form, or a clinic appointment.
+          Contact local emergency services now. Do not wait for this form or a clinic appointment.
         </p>
       </div>
 
@@ -452,7 +453,7 @@ export function TriageWorkspace() {
               <h2 className="text-xl font-semibold text-foreground">New appointment request</h2>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              Routing organizes requests for staff review. It does not diagnose or recommend treatment.
+              Organize requests for staff review.
             </p>
           </div>
 
@@ -473,7 +474,7 @@ export function TriageWorkspace() {
                 aria-describedby="synthetic-id-hint"
               />
               <p id="synthetic-id-hint" className="mt-1 text-xs text-muted-foreground">
-                Must begin with SYN-. A generated demo ID is provided.
+                Use a fictional ID beginning with SYN-.
               </p>
             </div>
 
@@ -511,7 +512,7 @@ export function TriageWorkspace() {
                 onChange={(event) => setPreferredAppointmentTime(event.target.value)}
                 maxLength={120}
                 required
-                placeholder="e.g. Today after 3 pm"
+                placeholder="Enter preferred date or time"
                 className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
@@ -540,8 +541,8 @@ export function TriageWorkspace() {
                       <span className="block font-semibold capitalize text-foreground">{value}</span>
                       <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
                         {value === "urgent"
-                          ? "Sets a minimum of same-day human review."
-                          : "The symptom policy and AI can still raise urgency."}
+                          ? "Requests same-day review."
+                          : "Review rules may raise priority."}
                       </span>
                     </span>
                   </label>
@@ -556,7 +557,7 @@ export function TriageWorkspace() {
                 onChange={(event) => setHasSyntheticConfirmation(event.target.checked)}
                 className="mt-0.5 size-4 shrink-0 accent-primary"
               />
-              <span>I confirm this request uses fictional demo data only.</span>
+              <span>I confirm this request uses fictional data only.</span>
             </label>
 
             {submitError && (
@@ -592,7 +593,7 @@ export function TriageWorkspace() {
                 </div>
                 <RoutingDetails record={latestIntake} />
                 <p className="border-t border-border pt-3 text-xs leading-relaxed text-muted-foreground">
-                  This is an administrative routing suggestion, not a diagnosis. A staff member must review the request.
+                  Administrative routing only. Staff review is required.
                 </p>
               </Card>
             </section>
@@ -608,7 +609,7 @@ export function TriageWorkspace() {
                   </h2>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Stored locally on this demo backend. Newest requests appear first.
+                  Saved locally. Newest requests appear first.
                 </p>
               </div>
               <Button
@@ -688,17 +689,6 @@ export function TriageWorkspace() {
         {activeWorkspace === "care" && <CareCoordinator intakes={intakes} onAssigned={handleSavedRecord} />}
       </div>
 
-      <Card className="border-primary/15 bg-muted/60">
-        <div className="flex gap-3">
-          <ShieldAlert className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">Safety note</h2>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              This prototype organizes requests for human review and does not provide a diagnosis or treatment plan. If a request indicates an emergency, contact local emergency services immediately; do not wait for a clinic appointment or queue review.
-            </p>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }

@@ -215,7 +215,7 @@ function AssignmentCard({
           </div>
           <div className="sm:col-span-2">
             <label htmlFor={reasonId} className="text-xs font-semibold text-foreground">Assignment note</label>
-            <textarea id={reasonId} value={reason} onChange={(event) => { setReason(event.target.value); setSaved(false); }} minLength={5} maxLength={500} rows={2} required placeholder="Why was this clinician selected? For example: balanced the demo case workload." className="mt-1.5 w-full resize-y rounded-xl border border-border bg-white px-3 py-2.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10" />
+            <textarea id={reasonId} value={reason} onChange={(event) => { setReason(event.target.value); setSaved(false); }} minLength={5} maxLength={500} rows={2} required placeholder="Add a short reason" className="mt-1.5 w-full resize-y rounded-xl border border-border bg-white px-3 py-2.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10" />
             <p className="mt-1 text-right text-[10px] text-muted-foreground">{reason.length}/500</p>
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
@@ -313,7 +313,7 @@ export function CareCoordinator({
 
       <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-950">
         <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden="true" />
-        <p><strong>Demo staffing only.</strong> Names and case limits are fictional. Capacity is a prototype workload count, not live availability. Assignments are administrative suggestions and require staff review.</p>
+        <p><strong>Fictional roster.</strong> Capacity is simulated. Staff chooses the final assignment.</p>
       </div>
 
       {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>}

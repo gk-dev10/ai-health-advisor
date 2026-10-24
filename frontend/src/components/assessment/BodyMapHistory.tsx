@@ -126,7 +126,7 @@ export function BodyMapHistory({ selectedParts }: { selectedParts: SelectedBodyP
         <div>
           <h2 className="text-base font-semibold text-foreground">Body-map history</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Save up to {MAX_SNAPSHOTS} check-ins on this browser and compare regions and severity with the latest one.
+            Compare body regions and severity with your previous check-in.
           </p>
         </div>
         <div className="flex gap-2">
@@ -142,7 +142,7 @@ export function BodyMapHistory({ selectedParts }: { selectedParts: SelectedBodyP
       </div>
 
       <p className="rounded-md bg-muted px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-        Only selected body regions, their severity levels, and save times are stored. Your written description is not saved here. Entries stay in this browser until you clear them.
+        Up to {MAX_SNAPSHOTS} check-ins are saved in this browser. Descriptions are not saved.
       </p>
 
       {status && <p role="status" className="text-xs text-emerald-800">{status}</p>}
