@@ -83,6 +83,25 @@ def _get_gemini_client() -> Any:
     return genai.Client(api_key=settings.gemini_api_key)
 
 
+def _safe_gemini_error(exc: Exception, query: str) -> str:
+    """Return useful provider diagnostics without echoing submitted symptom text or the API key."""
+    error_name = type(exc).__name__
+    code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    if code is not None:
+        message = getattr(exc, "message", None) or str(exc)
+        message = str(message).replace(settings.gemini_api_key, "[redacted API key]")
+        if query:
+            message = message.replace(query, "[symptom text redacted]")
+        message = " ".join(message.split())[:500]
+        return f"Gemini API error (HTTP {code}): {message or error_name}"
+
+    if error_name in {"ConnectError", "ConnectTimeout", "ConnectionError"}:
+        return "Could not connect to the Gemini API. Check internet access, proxy, or firewall settings."
+    if error_name in {"ReadTimeout", "WriteTimeout", "TimeoutException"}:
+        return "The Gemini API request timed out. Please try again."
+    return f"Gemini request failed ({error_name}). Check the backend logs for details."
+
+
 def _generate_guidance(request: AssessmentRequest) -> AssessmentGuidance:
     prompt_data: dict[str, Any] = request.model_dump(by_alias=True)
     try:
@@ -102,11 +121,12 @@ def _generate_guidance(request: AssessmentRequest) -> AssessmentGuidance:
             raise ValueError("The model returned an empty response.")
         return AssessmentGuidance.model_validate_json(response.text)
     except Exception as exc:
-        # Do not log the request or provider exception text, as either may contain health data.
-        logger.warning("Gemini guidance generation failed (%s)", type(exc).__name__)
+        # Include actionable provider diagnostics but never log submitted health data or secrets.
+        diagnostic = _safe_gemini_error(exc, request.query)
+        logger.warning("Gemini guidance generation failed: %s", diagnostic)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="AI guidance is temporarily unavailable. Please try again shortly.",
+            detail=diagnostic,
         ) from exc
 
 

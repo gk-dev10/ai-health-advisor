@@ -114,13 +114,13 @@ Open <http://localhost:3000> for the body-map assessment or <http://localhost:30
 
 All application endpoints use the `/api/v1` prefix:
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/health` | Check API status and AI configuration |
-| `POST` | `/assessments` | Request general AI health guidance |
-| `POST` | `/intakes` | Save a synthetic intake and its routing suggestion |
-| `GET` | `/intakes?limit=100` | List recent intake records (limit 1-500) |
-| `PATCH` | `/intakes/{id}/override` | Save a staff disposition and required reason |
+| Method  | Path                     | Purpose                                            |
+| ------- | ------------------------ | -------------------------------------------------- |
+| `GET`   | `/health`                | Check API status and AI configuration              |
+| `POST`  | `/assessments`           | Request general AI health guidance                 |
+| `POST`  | `/intakes`               | Save a synthetic intake and its routing suggestion |
+| `GET`   | `/intakes?limit=100`     | List recent intake records (limit 1-500)           |
+| `PATCH` | `/intakes/{id}/override` | Save a staff disposition and required reason       |
 
 The assessment flow does not store assessments. Intake records are stored locally in SQLite at `backend/data/intakes.sqlite3` by default. Set `TRIAGE_DB_PATH` to change the path; relative paths are resolved from `backend/`.
 
@@ -158,3 +158,4 @@ frontend/
 docs/
   triage-policy.md       Intake routing policy
   triage-safety-note.md  Demo safety guidance
+```

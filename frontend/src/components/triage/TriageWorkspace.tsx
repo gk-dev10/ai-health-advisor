@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
-  AlertTriangle,
   CalendarDays,
   Check,
   ClipboardList,
@@ -392,18 +391,6 @@ export function TriageWorkspace() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 rounded-xl border border-amber-200 bg-amber-50 p-4 sm:flex-row sm:items-start">
-        <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-800" aria-hidden="true" />
-        <div>
-          <p className="font-semibold text-amber-950">Hackathon demo — synthetic records only</p>
-          <p className="mt-1 text-sm leading-relaxed text-amber-900">
-            Do not enter real patient information. Symptom text and requester urgency may be sent to
-            Gemini when AI is configured. Synthetic ID and preferred appointment time stay in the
-            local clinic queue.
-          </p>
-        </div>
-      </div>
-
       <div
         role="alert"
         className="flex gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-900"
