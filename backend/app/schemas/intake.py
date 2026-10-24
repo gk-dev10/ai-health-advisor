@@ -58,6 +58,16 @@ class AIClassification(IntakeModel):
     is_clear: bool
 
 
+class GeminiAIClassification(BaseModel):
+    """Gemini-compatible schema; strict validation still uses AIClassification."""
+
+    model_config = ConfigDict(alias_generator=_to_camel, populate_by_name=True)
+
+    category: RoutingCategory
+    signal_ids: list[PolicySignalId] = Field(max_length=12)
+    is_clear: bool
+
+
 class RoutingSuggestion(IntakeModel):
     category: RoutingCategory
     reason: str = Field(min_length=1, max_length=400)

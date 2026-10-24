@@ -26,6 +26,7 @@ from app.core.triage_policy import (
 )
 from app.schemas.intake import (
     AIClassification,
+    GeminiAIClassification,
     IntakeQueueResponse,
     IntakeRecord,
     IntakeSubmission,
@@ -83,7 +84,7 @@ def _generate_classification(request: IntakeSubmission) -> AIClassification:
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTION,
             response_mime_type="application/json",
-            response_schema=AIClassification,
+            response_schema=GeminiAIClassification,
             temperature=0.1,
         ),
     )

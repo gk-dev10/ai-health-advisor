@@ -49,6 +49,17 @@ class AssessmentGuidance(ApiModel):
     seek_care_if: list[str] = Field(min_length=1, max_length=6)
 
 
+class GeminiAssessmentGuidance(BaseModel):
+    """Provider schema without Pydantic's unsupported additionalProperties field."""
+
+    model_config = ConfigDict(alias_generator=_to_camel, populate_by_name=True)
+
+    summary: str
+    suggested_steps: list[str] = Field(min_length=1, max_length=6)
+    follow_up_questions: list[str] = Field(max_length=3)
+    seek_care_if: list[str] = Field(min_length=1, max_length=6)
+
+
 class AssessmentResponse(ApiModel):
     guidance: AssessmentGuidance
     disclaimer: str
@@ -83,7 +94,7 @@ def _generate_guidance(request: AssessmentRequest) -> AssessmentGuidance:
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_INSTRUCTION,
                 response_mime_type="application/json",
-                response_schema=AssessmentGuidance,
+                response_schema=GeminiAssessmentGuidance,
                 temperature=0.2,
             ),
         )

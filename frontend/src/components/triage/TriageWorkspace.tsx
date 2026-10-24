@@ -61,6 +61,10 @@ function sourceLabel(source: IntakeRecord["recommendation"]["source"]) {
   return "AI-assisted";
 }
 
+function matchesQueueFilter(record: IntakeRecord, selectedFilter: QueueFilter) {
+  return selectedFilter === "all" || record.finalCategory === selectedFilter;
+}
+
 function CategoryBadge({ category }: { category: RoutingCategory }) {
   return (
     <span
@@ -340,18 +344,12 @@ export function TriageWorkspace() {
 
   const filteredIntakes = useMemo(() => {
     if (filter === "all") return intakes;
-    return intakes.filter(
-      (record) =>
-        record.finalCategory === filter || record.recommendation.category === filter
-    );
+    return intakes.filter((record) => matchesQueueFilter(record, filter));
   }, [filter, intakes]);
 
   const countForFilter = (selectedFilter: QueueFilter) => {
     if (selectedFilter === "all") return intakes.length;
-    return intakes.filter(
-      (record) =>
-        record.finalCategory === selectedFilter || record.recommendation.category === selectedFilter
-    ).length;
+    return intakes.filter((record) => matchesQueueFilter(record, selectedFilter)).length;
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
