@@ -52,9 +52,9 @@ The assessment endpoint requires `GEMINI_API_KEY`; its health endpoint remains a
 
 ## Clinic intake prototype
 
-The hackathon clinic intake workspace and its initial safety policy are being added alongside the existing body-map assessment. The prototype is limited to synthetic records. See [the clinic intake routing policy](docs/triage-policy.md) for the initial categories, policy signals, and safety behavior.
+The hackathon clinic intake workspace is available at `/triage` alongside the existing body-map assessment. The prototype is limited to synthetic records. See [the clinic intake routing policy](docs/triage-policy.md) for the categories, policy signals, and safety behavior.
 
-The intake API stores requests locally in SQLite at `backend/data/intakes.sqlite3` by default (override with `TRIAGE_DB_PATH`). Its endpoints are `POST /api/v1/intakes`, `GET /api/v1/intakes`, and `PATCH /api/v1/intakes/{id}/override`. AI classification failures still save the request with a same-day human-review fallback. The existing assessment flow remains stateless.
+The intake API stores requests locally in SQLite at `backend/data/intakes.sqlite3` by default (override with `TRIAGE_DB_PATH`). Its endpoints are `POST /api/v1/intakes`, `GET /api/v1/intakes`, and `PATCH /api/v1/intakes/{id}/override`. AI classification failures still save the request with a same-day human-review fallback. Staff can review the recommendation and reason, then save a final disposition with a note. The existing assessment flow remains stateless.
 
 ## Project structure
 
@@ -68,8 +68,9 @@ backend/
   requirements.txt
   pyproject.toml
 frontend/
-  src/app/           Next.js page, layout, and global styles
-  src/components/    Assessment UI, shared layout, and 3D body map
+  src/app/           Next.js pages, layout, and global styles
+  src/app/triage/    Staff intake workspace route
+  src/components/    Assessment UI, staff triage UI, shared layout, and 3D body map
   src/hooks/         Body selection and assessment form state
   src/lib/           Frontend API client
   src/types/         Shared TypeScript request and response types
