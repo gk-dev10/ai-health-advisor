@@ -50,6 +50,10 @@ Open <http://localhost:3000>. The frontend defaults to `http://localhost:8000` f
 
 The API requires `GEMINI_API_KEY`; its health endpoint remains available without a key, while assessment requests return a clear configuration error. AI output is educational, can be inaccurate, and is not a diagnosis or treatment plan. The app does not store assessments.
 
+## Clinic intake prototype
+
+The hackathon clinic intake workspace and its initial safety policy are being added alongside the existing body-map assessment. The prototype is limited to synthetic records. See [the clinic intake routing policy](docs/triage-policy.md) for the initial categories, policy signals, and safety behavior.
+
 ## Project structure
 
 ```text
