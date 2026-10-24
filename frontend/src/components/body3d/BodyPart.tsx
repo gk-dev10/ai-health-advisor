@@ -52,29 +52,19 @@ export default function BodyPart({ definition, selected, severity, onSelect, onH
     return COLOR_DEFAULT;
   }, [selected, hovered, severity]);
 
-  const material = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: COLOR_DEFAULT.clone(),
-        emissive: new THREE.Color("#000000"),
-        emissiveIntensity: 0.35,
-        roughness: 0.55,
-        metalness: 0.05,
-      }),
-    []
-  );
+  const matRef = useRef<THREE.MeshStandardMaterial>(null);
 
   useFrame((_, delta) => {
-    const mat = material;
+    const mat = matRef.current;
+    const mesh = meshRef.current;
+    if (!mat || !mesh) return;
     mat.color.lerp(targetColor, Math.min(1, delta * 10));
     mat.emissive.lerp(hovered || selected ? targetColor : new THREE.Color("#000000"), Math.min(1, delta * 10));
     mat.emissiveIntensity = selected ? 0.55 : hovered ? 0.4 : 0.15;
 
     const pulse = selected ? 1.04 : hovered ? 1.02 : 1;
     const [bx, by, bz] = definition.scale ?? [1, 1, 1];
-    if (meshRef.current) {
-      meshRef.current.scale.lerp(new THREE.Vector3(bx * pulse, by * pulse, bz * pulse), Math.min(1, delta * 12));
-    }
+    mesh.scale.lerp(new THREE.Vector3(bx * pulse, by * pulse, bz * pulse), Math.min(1, delta * 12));
   });
 
   const handlePointerOver = (e: ThreeEvent<PointerEvent>) => {
@@ -100,7 +90,6 @@ export default function BodyPart({ definition, selected, severity, onSelect, onH
     <mesh
       ref={meshRef}
       geometry={geometry}
-      material={material}
       position={definition.position}
       rotation={definition.rotation ?? [0, 0, 0]}
       scale={definition.scale ?? [1, 1, 1]}
@@ -110,6 +99,15 @@ export default function BodyPart({ definition, selected, severity, onSelect, onH
       castShadow
       receiveShadow
       userData={{ id: definition.id, name: definition.name }}
-    />
+    >
+      <meshStandardMaterial
+        ref={matRef}
+        color={COLOR_DEFAULT}
+        emissive={"#000000"}
+        emissiveIntensity={0.35}
+        roughness={0.55}
+        metalness={0.05}
+      />
+    </mesh>
   );
 }

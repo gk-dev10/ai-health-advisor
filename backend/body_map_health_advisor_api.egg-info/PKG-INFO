@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: body-map-health-advisor-api
+Version: 1.0.0
+Summary: FastAPI service for the Body Map AI Health Advisor
+Requires-Python: >=3.10
+Requires-Dist: fastapi<1.0,>=0.115
+Requires-Dist: uvicorn[standard]<1.0,>=0.30
+Requires-Dist: pydantic<3.0,>=2.9
+Requires-Dist: python-dotenv<2.0,>=1.0
+Requires-Dist: google-genai<3.0,>=1.0

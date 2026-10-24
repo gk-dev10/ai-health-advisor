@@ -8,11 +8,29 @@ import { AssessmentPanel } from "@/components/assessment/AssessmentPanel";
 import { useAssessment } from "@/hooks/useAssessment";
 import { APP_DESCRIPTION } from "@/constants/app";
 import type { SelectedBodyPart } from "@/types/body";
+import type { ApiAssessmentResponse } from "@/types/assessment";
+import { submitAssessment } from "@/lib/api";
 
 export default function HomePage() {
   const [selectedParts, setSelectedParts] = useState<SelectedBodyPart[]>([]);
+  const [hasPrivacyConsent, setHasPrivacyConsent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [result, setResult] = useState<ApiAssessmentResponse | null>(null);
   const { query, setQuery, buildPayload, isValid, errors } =
     useAssessment(selectedParts);
+
+  const handleSelectionChange = (selection: SelectedBodyPart[]) => {
+    setSelectedParts(selection);
+    setResult(null);
+    setSubmitError(null);
+  };
+
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    setResult(null);
+    setSubmitError(null);
+  };
 
   const severities = useMemo(
     () =>
@@ -22,9 +40,22 @@ export default function HomePage() {
     [selectedParts]
   );
 
-  const handleSubmit = () => {
-    const payload = buildPayload();
-    console.log("Assessment Payload:", JSON.stringify(payload, null, 2));
+  const handleSubmit = async () => {
+    if (!isValid || !hasPrivacyConsent || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setResult(null);
+    try {
+      const response = await submitAssessment(buildPayload());
+      setResult(response);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Something went wrong. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -48,17 +79,22 @@ export default function HomePage() {
             <div className="h-[60vh] min-h-[420px] lg:h-[75vh] lg:w-1/2">
               <BodyViewer
                 severities={severities}
-                onSelectionChange={setSelectedParts}
+                onSelectionChange={handleSelectionChange}
               />
             </div>
             <div className="lg:w-1/2">
               <AssessmentPanel
                 selectedParts={selectedParts}
                 query={query}
-                onQueryChange={setQuery}
+                onQueryChange={handleQueryChange}
                 onSubmit={handleSubmit}
                 isValid={isValid}
                 errors={errors}
+                isSubmitting={isSubmitting}
+                hasPrivacyConsent={hasPrivacyConsent}
+                onPrivacyConsentChange={setHasPrivacyConsent}
+                result={result}
+                submitError={submitError}
               />
             </div>
           </div>

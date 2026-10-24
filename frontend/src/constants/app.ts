@@ -1,10 +1,10 @@
 export const APP_NAME = "Body Map AI Health Advisor";
 
 export const APP_DESCRIPTION =
-  "Select affected body regions, describe symptoms, and receive AI-powered health guidance.";
+  "Select affected body regions, describe symptoms, and receive cautious, general AI health information.";
 
 export const MEDICAL_DISCLAIMER =
-  "This application does not provide medical diagnosis and should not replace professional healthcare advice. If you are experiencing a medical emergency, call your local emergency services immediately.";
+  "AI-generated information is not a diagnosis or treatment plan and should not replace professional care. For severe or rapidly worsening symptoms, contact local emergency services.";
 
 export const BODY_REGION_LABELS: Record<string, string> = {
   head: "Head",

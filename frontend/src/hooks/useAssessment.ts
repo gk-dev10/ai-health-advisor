@@ -11,9 +11,10 @@ export function useAssessment(selectedParts: SelectedBodyPart[]) {
     return {
       bodyParts: selectedParts.map((p) => ({
         id: p.id,
+        name: p.name,
         severity: p.severity ?? 1,
       })),
-      query,
+      query: query.trim(),
     };
   }, [selectedParts, query]);
 
@@ -22,8 +23,11 @@ export function useAssessment(selectedParts: SelectedBodyPart[]) {
     if (selectedParts.length === 0) {
       errs.push("Select at least one body region.");
     }
-    if (query.length < 10) {
+    if (query.trim().length < 10) {
       errs.push("Query must be at least 10 characters.");
+    }
+    if (query.length > 2000) {
+      errs.push("Query must be 2,000 characters or fewer.");
     }
     return errs;
   }, [selectedParts, query]);

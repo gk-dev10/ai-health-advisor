@@ -7,6 +7,7 @@ import { SeverityCard } from "./SeverityCard";
 import { QueryInput } from "./QueryInput";
 import { AssessmentSummary } from "./AssessmentSummary";
 import { Button } from "@/components/ui/Button";
+import type { ApiAssessmentResponse } from "@/types/assessment";
 
 interface AssessmentPanelProps {
   selectedParts: SelectedBodyPart[];
@@ -15,6 +16,11 @@ interface AssessmentPanelProps {
   onSubmit: () => void;
   isValid: boolean;
   errors: string[];
+  isSubmitting: boolean;
+  hasPrivacyConsent: boolean;
+  onPrivacyConsentChange: (checked: boolean) => void;
+  result: ApiAssessmentResponse | null;
+  submitError: string | null;
 }
 
 export function AssessmentPanel({
@@ -24,6 +30,11 @@ export function AssessmentPanel({
   onSubmit,
   isValid,
   errors,
+  isSubmitting,
+  hasPrivacyConsent,
+  onPrivacyConsentChange,
+  result,
+  submitError,
 }: AssessmentPanelProps) {
   return (
     <div className="space-y-6">
@@ -93,6 +104,76 @@ export function AssessmentPanel({
         query={query}
       />
 
+      <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={hasPrivacyConsent}
+          onChange={(event) => onPrivacyConsentChange(event.target.checked)}
+          className="mt-0.5 size-4 shrink-0 accent-primary"
+        />
+        <span>
+          I understand that my selected body regions and symptom description will be sent to
+          Google Gemini to generate this guidance. I will not include identifying details.
+        </span>
+      </label>
+
+      {submitError && (
+        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {submitError}
+        </p>
+      )}
+
+      {result && (
+        <section
+          aria-live="polite"
+          className="space-y-4 rounded-xl border border-primary/20 bg-card p-5 shadow-sm"
+        >
+          <div>
+            <h3 className="text-base font-semibold text-foreground">AI-generated guidance</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {result.guidance.summary}
+            </p>
+          </div>
+
+          {result.guidance.suggestedSteps.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-foreground">Possible next steps</h4>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                {result.guidance.suggestedSteps.map((step, index) => (
+                  <li key={`${index}-${step}`}>{step}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {result.guidance.followUpQuestions.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-foreground">Questions to consider</h4>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                {result.guidance.followUpQuestions.map((question, index) => (
+                  <li key={`${index}-${question}`}>{question}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {result.guidance.seekCareIf.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-foreground">When to seek care</h4>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                {result.guidance.seekCareIf.map((situation, index) => (
+                  <li key={`${index}-${situation}`}>{situation}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <p className="border-t border-border pt-3 text-xs leading-relaxed text-muted-foreground">
+            {result.disclaimer}
+          </p>
+        </section>
+      )}
+
       {errors.length > 0 && (
         <div className="space-y-1 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
           {errors.map((err, i) => (
@@ -105,11 +186,11 @@ export function AssessmentPanel({
 
       <Button
         variant="primary"
-        disabled={!isValid}
+        disabled={!isValid || !hasPrivacyConsent || isSubmitting}
         onClick={onSubmit}
         className="w-full"
       >
-        Analyze Assessment
+        {isSubmitting ? "Generating guidance..." : "Analyze Assessment"}
       </Button>
     </div>
   );

@@ -52,7 +52,7 @@ export function AssessmentSummary({
         </div>
       )}
 
-      {query.length >= 10 && query.length <= 2000 && (
+      {query.trim().length >= 10 && query.length <= 2000 && (
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             Query

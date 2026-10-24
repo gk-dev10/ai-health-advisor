@@ -10,7 +10,7 @@ const MAX_LENGTH = 2000;
 
 export function QueryInput({ value, onChange }: QueryInputProps) {
   const charCount = value.length;
-  const isUnderMin = charCount < MIN_LENGTH;
+  const isUnderMin = value.trim().length < MIN_LENGTH;
 
   return (
     <div className="space-y-2">
@@ -22,6 +22,7 @@ export function QueryInput({ value, onChange }: QueryInputProps) {
           Describe Your Symptoms
         </label>
         <span
+          id="query-counter"
           className={`text-xs ${
             charCount > MAX_LENGTH
               ? "text-red-500"
@@ -36,6 +37,7 @@ export function QueryInput({ value, onChange }: QueryInputProps) {
       <textarea
         id="symptom-query"
         value={value}
+        maxLength={MAX_LENGTH}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Describe your pain, symptoms, discomfort, or concerns..."
         rows={5}
@@ -49,7 +51,8 @@ export function QueryInput({ value, onChange }: QueryInputProps) {
       </p>
       {isUnderMin && charCount > 0 && (
         <p id="query-warning" className="text-xs text-amber-600">
-          {MIN_LENGTH - charCount} more character{MIN_LENGTH - charCount === 1 ? "" : "s"} needed.
+          {MIN_LENGTH - value.trim().length} more character
+          {MIN_LENGTH - value.trim().length === 1 ? "" : "s"} needed.
         </p>
       )}
     </div>
