@@ -21,7 +21,7 @@ Written symptom descriptions can omit useful context such as where discomfort is
 
 The home page contains a rotatable, zoomable 3D human model. Selecting a body region adds it to the assessment at severity 1. Selecting it again increases severity through levels 1 to 5; selecting at the maximum removes it. Users can clear all selections. Selected regions and their severity are summarized alongside a written description field.
 
-Before the request can be sent, the user must provide a description that passes client-side validation and check a consent statement explaining that the selected regions and symptom description go to Google Gemini. The backend validates the request and asks Gemini for a structured response. The response includes:
+Before the request can be sent, the user must provide a description that passes client-side validation and check a consent statement explaining that the selected regions and symptom description go to Google Gemini. An optional guided interview collects when symptoms started, how they changed, and how the sensation is described. The user can skip any question. Those answers are appended to the assessment description and reviewed with the other information before consent and submission. The backend validates the request and asks Gemini for a structured response. The response includes:
 
 - A short summary of the reported information.
 - A small set of possible low-risk next steps.
@@ -29,13 +29,17 @@ Before the request can be sent, the user must provide a description that passes 
 - Situations in which the user should seek care.
 - A disclaimer that the output is general information, not a diagnosis or treatment plan.
 
-The model instructions prohibit diagnosis, disease naming, medication dosing, and false reassurance. An emergency concern should prompt the user to contact local emergency services. These safeguards reduce risk but cannot guarantee that generated content is correct. Assessment requests and results are not stored by the app.
+The model instructions prohibit diagnosis, disease naming, medication dosing, and false reassurance. An emergency concern should prompt the user to contact local emergency services. These safeguards reduce risk but cannot guarantee that generated content is correct. Assessment requests and results are not stored by the server.
+
+The user can download a text visit summary containing selected regions, severity levels, the written description, guided interview answers, and any AI guidance received. The browser can also save up to 20 body-map-only check-ins locally and compare the current selection with the newest saved snapshot. History stores only region IDs/names, severity values, and timestamps; it excludes the written description. The history panel lets the user clear those browser-local records.
 
 ### 2. Synthetic clinic intake and staff queue
 
 The `/triage` page is an administrative demo workspace. It accepts a synthetic patient ID, a symptom description, a preferred appointment time, and requester urgency (`routine` or `urgent`). The interface asks the submitter to confirm the request uses fictional data and warns not to enter identifying information.
 
 Each saved item displays the original routing recommendation, its reason and source, the request details, and the current final staff disposition. The queue supports refresh and filters by the **final disposition**. Staff can set or confirm one of three categories and must enter a decision note before saving. The original suggestion remains visible after a staff change, and emergency action guidance stays visible if the recorded disposition is overridden.
+
+The Care Coordinator tab maps the **final staff-reviewed category** to an administrative queue: same-day clinician review or general appointments. Emergency cases remain an emergency-services escalation and cannot be assigned as clinic appointments. For other categories, staff manually select a clinician from a fictional roster, enter a staff label and assignment reason, and can reassign later. Each assignment is appended to SQLite history with its timestamp; the latest team-compatible assignment drives the workload count. The capacity board shows assigned demo cases against fixed fictional case limits, not live calendar availability. If a staff override changes the category, the existing assignment is flagged for review. The staff label is not authenticated. This workflow does not infer medical specialty from symptoms or make a clinical decision.
 
 ### 3. Safety-oriented routing
 
@@ -67,7 +71,9 @@ Gemini's intake response is restricted to a routing category, approved policy si
 ┌──────────────────────────── FastAPI ──────────────────────────────┐
 │ Pydantic validation · policy routing · fixed reasons · API errors │
 │                                                                    │
-│ `/assessments`                 `/intakes`, `/intakes/{id}/override` │
+│ `/assessments`                 `/intakes`, `/staffing/roster`,      │
+│                                `/intakes/{id}/override`,            │
+│                                `/intakes/{id}/assignment`           │
 └─────────────────┬───────────────────────────────┬──────────────────┘
                   │                               │
                   ▼                               ├────> SQLite
@@ -85,7 +91,7 @@ Gemini's intake response is restricted to a routing category, approved policy si
 | API | Python, FastAPI | Assessment and intake endpoints, CORS, error handling |
 | Data validation | Pydantic | Request/response contracts and constrained AI output validation |
 | Generative AI | Google Gemini via `google-genai` | General health-education response and optional intake classification |
-| Persistence | SQLite | Local storage for synthetic intake records and staff dispositions |
+| Persistence | SQLite | Local synthetic intake records, staff dispositions, and assignment audit history |
 
 ## Data flows
 
@@ -94,7 +100,7 @@ Gemini's intake response is restricted to a routing category, approved policy si
 1. The browser keeps the selected regions, severity values, and description in page state.
 2. The UI validates input and requires a consent checkbox.
 3. The browser sends the assessment payload to `POST /api/v1/assessments`.
-4. FastAPI validates it and, if `GEMINI_API_KEY` is set, sends region/severity data and the description to Gemini.
+4. FastAPI validates it and, if `GEMINI_API_KEY` is set, sends region/severity data, the description, and any optional guided interview answers to Gemini.
 5. The server validates the structured output and returns guidance plus a disclaimer.
 6. The browser displays the result. The assessment is not written to SQLite.
 
@@ -106,6 +112,7 @@ Gemini's intake response is restricted to a routing category, approved policy si
 4. Policy precedence and safe fallback behavior produce a recommendation.
 5. The backend stores the request, recommendation, and initial final category in local SQLite.
 6. The browser displays the result and queue. Staff can retrieve the queue with `GET /api/v1/intakes`, then record a final category and reason through `PATCH /api/v1/intakes/{id}/override`.
+7. The Care Coordinator tab loads fictional staff and workload through `GET /api/v1/staffing/roster`. For same-day or routine requests, a staff member chooses an eligible clinician for the final priority queue and records a staff label and reason through `PATCH /api/v1/intakes/{id}/assignment`; each reassignment is retained in history. Emergency requests remain an emergency-services escalation.
 
 ## API surface
 
@@ -118,12 +125,15 @@ All routes are versioned under `/api/v1`:
 | `POST /intakes` | Classifies/routes and stores a synthetic intake. |
 | `GET /intakes?limit=100` | Returns recent intake records; limit is 1 to 500. |
 | `PATCH /intakes/{id}/override` | Saves a staff disposition and required reason. |
+| `GET /staffing/roster` | Lists the fictional team roster and assigned/open demo case counts. |
+| `PATCH /intakes/{id}/assignment` | Validates the selected clinician against the current non-emergency priority team and demo capacity, then appends an assignment audit entry. Emergency appointment assignment is rejected. |
 
 FastAPI's interactive API documentation is available at `/docs` while running locally.
 
 ## Data and privacy boundaries
 
 - The body-map assessment sends selected region IDs/names, severity values, and description to the backend and Gemini after consent. Assessments are not persisted by the app.
+- A visit summary is downloaded to the user's device only after they request it. Body-map check-ins are saved in browser local storage only after **Save check-in** is selected; they exclude the free-text description and can be deleted in the history panel.
 - Gemini intake classification receives only symptom description and requester-selected urgency. The synthetic ID and preferred appointment time stay in the local backend database.
 - Intake queue records are persisted in SQLite at `backend/data/intakes.sqlite3` by default. `TRIAGE_DB_PATH` can change the location.
 - The UI's `SYN-` requirement and fictional-data checkbox are guardrails for demonstrations. They cannot establish that the free-text description is actually fictional.
@@ -134,17 +144,21 @@ FastAPI's interactive API documentation is available at `/docs` while running lo
 ```text
 backend/app/core/config.py          Environment and service configuration
 backend/app/core/triage_policy.py   Routing vocabulary, signal rules, precedence
-backend/app/core/intake_store.py    SQLite schema and intake persistence
+backend/app/core/intake_store.py    SQLite intake, disposition, and assignment history
 backend/app/routers/assessment.py   Assessment validation and Gemini request
 backend/app/routers/intakes.py      Intake classification, policy, and API routes
+backend/app/core/staffing.py        Fictional demo roster and priority-to-team mapping
 backend/app/schemas/intake.py       Intake and constrained classification schemas
 backend/tests/                      Synthetic routing tests and fixture cases
 frontend/src/app/page.tsx           Body-map assessment page
 frontend/src/app/triage/page.tsx    Clinic intake page
 frontend/src/components/body3d/     3D body visualization components
 frontend/src/components/assessment/ Assessment form and result components
-frontend/src/components/triage/     Intake form, queue, filters, staff disposition
+frontend/src/components/assessment/GuidedSymptomInterview.tsx Optional structured follow-up inputs
+frontend/src/components/assessment/BodyMapHistory.tsx Browser-local body-map snapshots
+frontend/src/components/triage/     Intake form, queue, staff disposition, care coordination
 frontend/src/lib/api.ts             Frontend HTTP client
+frontend/src/lib/visitSummary.ts    Text visit-summary export
 docs/triage-policy.md               Detailed routing policy
 docs/triage-safety-note.md          Demo safety note
 ```
@@ -152,11 +166,11 @@ docs/triage-safety-note.md          Demo safety note
 ## Presentation/demo outline
 
 1. **Need:** Explain the value of structured symptom location and organized appointment requests.
-2. **Body map:** Select multiple regions, demonstrate severity changes, enter fictional details, show consent and the structured guidance layout.
-3. **Staff intake:** Submit a synthetic request and show the recommendation, source, reason, and saved queue record.
-4. **Safety behavior:** Use a known emergency phrase to show immediate policy routing, then use an unclear request to show same-day fallback.
+2. **Body map:** Select multiple regions, demonstrate severity changes, save a check-in, change a severity, and show the local comparison. Use the guided interview, review the summary, and download the visit summary.
+3. **Staff intake:** Enter a fictional appointment request, confirm it is synthetic, submit it, and show the recommendation, source, reason, and saved queue record.
+4. **Safety behavior:** Demonstrate emergency and same-day policy behavior with fictional examples entered into the intake form.
 5. **Human review:** Filter by final disposition, update a disposition with a note, and point out that the original recommendation and emergency instruction remain visible.
-6. **Limits and next steps:** Emphasize synthetic data, no diagnosis, local demo storage, language-matching limits, and the need for clinical and privacy review before any real-world use.
+6. **Limits and next steps:** Emphasize synthetic data, no diagnosis, browser-local history, language-matching limits, and the need for clinical and privacy review before any real-world use.
 
 ## Limitations and future work
 

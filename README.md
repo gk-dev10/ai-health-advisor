@@ -9,11 +9,15 @@ The project explores two related health-support tasks: helping a person describe
 ## Features
 
 - Select body regions and symptom severity on an interactive 3D body map, then request cautious, general health information.
+- Use an optional guided interview to add symptom onset, change over time, and sensation details to the assessment request.
+- Save body-map check-ins locally in the browser and compare selected regions and severity against the latest saved check-in.
+- Download a visit summary containing reported regions, the description, optional interview answers, and any AI guidance received.
 - Review and consent before sending assessment details to the backend and Gemini.
 - Submit synthetic clinic intake requests and review suggested routing in a staff workspace at `/triage`.
 - Apply deterministic emergency and same-day routing rules before or alongside AI classification. Unclear requests and AI failures fall back to same-day human review.
 - Review the intake queue, refresh it, and filter requests by their final staff disposition.
 - Record or update a staff disposition with a required decision note. The original routing suggestion and emergency guidance remain visible after an override.
+- Use the Care Coordinator tab to view priority-based team queues, a fictional clinician roster, and demo case capacity; staff manually assign and can reassign clinicians with a recorded reason and history. Emergency cases remain an emergency-services escalation, not an appointment assignment.
 
 ## Project description
 
@@ -23,9 +27,9 @@ People may find it difficult to describe where they feel discomfort and how seve
 
 ### Main user experiences
 
-**Body-map assessment (`/`):** The user rotates and zooms an interactive 3D body model, selects one or more regions, and cycles each selected region through a five-level severity scale. They add a written symptom description, review a summary, and provide explicit consent before submission. The backend sends the selected region names, severity values, and description to Gemini. The UI presents a structured response with a summary, possible low-risk next steps, follow-up questions, and situations in which to seek care. Assessments are not persisted by this application.
+**Body-map assessment (`/`):** The user rotates and zooms an interactive 3D body model, selects one or more regions, and cycles each selected region through a five-level severity scale. They add a written symptom description and may optionally add onset, trend, and sensation details with a guided interview. A summary can be downloaded to the device as a text file. Users can also save dated body-map-only snapshots in browser storage and compare current selections against the latest snapshot; snapshots exclude the written description and can be cleared in the interface. Explicit consent is required before assessment details are sent to Gemini. The UI presents structured guidance with a summary, possible low-risk next steps, follow-up questions, and situations in which to seek care.
 
-**Clinic intake (`/triage`):** Staff or a demo user submits an appointment request using a `SYN-` fictional ID, symptom description, preferred appointment time, and requester-selected routine or urgent status. The backend applies the team's policy and, when configured, asks Gemini for a constrained routing classification. The result is saved in a local SQLite queue. The workspace can refresh the queue, filter by final disposition, review the original recommendation and its source, and save a final staff disposition with a required note.
+**Clinic intake (`/triage`):** Staff or a demo user submits an appointment request using a `SYN-` fictional ID, symptom description, preferred appointment time, and requester-selected routine or urgent status. The backend applies the team's policy and, when configured, asks Gemini for a constrained routing classification. The result is saved in a local SQLite queue. The workspace can refresh the queue, filter by final disposition, review the original recommendation and its source, and save a final staff disposition with a required note. Its Care Coordinator tab maps routine and same-day priorities to administrative team queues, shows a fictional clinician roster and workload capacity, and lets staff manually assign or reassign a clinician while recording who made the assignment and why. Emergency cases are escalated to local emergency services and cannot be assigned as clinic appointments. The roster and capacity are demo data, not live scheduling information; specialty is not inferred from symptoms.
 
 ### Intake routing flow
 
@@ -47,7 +51,8 @@ Browser (Next.js / React)
   └── Clinic workspace ─────> FastAPI /intakes ──────> policy + optional Gemini
                                   │                         │
                                   ├── SQLite intake queue <──┘
-                                  └── staff override endpoint
+                                  ├── staff disposition endpoint
+                                  └── staff assignment and audit endpoint
 ```
 
 The frontend is built with Next.js, React, TypeScript, Three.js, React Three Fiber, and Drei. The backend uses FastAPI and Pydantic for HTTP APIs and request validation, with SQLite for the local intake queue. Gemini is accessed through Google's `google-genai` SDK. Separate Pydantic schemas constrain provider output, and the backend validates the parsed response again before using it.
@@ -62,7 +67,7 @@ The frontend is built with Next.js, React, TypeScript, Three.js, React Three Fib
 
 ### Demo narrative
 
-For a presentation, demonstrate the body map first: select several regions, adjust severity, enter a fictional symptom description, review the payload summary, consent, and show the structured guidance. Then open `/triage`, submit a fictional request, show how an emergency phrase is routed immediately or how an unclear request falls back to same-day review, and finish by filtering the queue and saving a staff disposition. Explain that the recommendation assists administrative review; staff retain the final decision.
+For a presentation, demonstrate the body map first: select several regions, adjust severity, enter a fictional symptom description, review the payload summary, consent, and show the structured guidance. Then open `/triage`, submit a fictional request, show how an emergency phrase is escalated immediately or how an unclear request falls back to same-day review, and assign a same-day or routine request to a clinician from the matching demo team. Show how workload capacity updates and how reassignment notes appear in assignment history. Explain that priority organizes administrative review; staff choose the clinician and retain the final decision.
 
 For a presentation-ready explanation of the modules, workflows, APIs, and limitations, see [the detailed project overview](docs/project-overview.md).
 
@@ -121,6 +126,8 @@ All application endpoints use the `/api/v1` prefix:
 | `POST`  | `/intakes`               | Save a synthetic intake and its routing suggestion |
 | `GET`   | `/intakes?limit=100`     | List recent intake records (limit 1-500)           |
 | `PATCH` | `/intakes/{id}/override` | Save a staff disposition and required reason       |
+| `GET`   | `/staffing/roster`          | Return fictional clinician profiles and current demo case capacity |
+| `PATCH` | `/intakes/{id}/assignment`  | Assign or reassign a clinician and append a staff audit entry; emergency appointment assignment is rejected |
 
 The assessment flow does not store assessments. Intake records are stored locally in SQLite at `backend/data/intakes.sqlite3` by default. Set `TRIAGE_DB_PATH` to change the path; relative paths are resolved from `backend/`.
 

@@ -3,7 +3,9 @@ import type {
   IntakeQueueResponse,
   IntakeRecord,
   IntakeSubmission,
+  StaffAssignmentRequest,
   StaffOverrideRequest,
+  StaffingRosterResponse,
 } from "@/types/intake";
 
 export const API_BASE_URL = (
@@ -104,6 +106,43 @@ export async function saveIntakeOverride(
   );
   if (!data.id || !data.recommendation) {
     throw new Error("The API returned an unexpected intake response. Please try again.");
+  }
+  return data;
+}
+
+export async function fetchStaffingRoster(): Promise<StaffingRosterResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/staffing/roster`, {
+    cache: "no-store",
+  });
+  const data = await readApiResponse<StaffingRosterResponse>(
+    response,
+    "Could not load the demo staffing roster. Check that the API is running and try again."
+  );
+  if (!Array.isArray(data.clinicians) || !Array.isArray(data.teamRoutes)) {
+    throw new Error("The API returned an unexpected staffing roster. Please try again.");
+  }
+  return data;
+}
+
+export async function saveIntakeAssignment(
+  id: string,
+  payload: StaffAssignmentRequest
+): Promise<IntakeRecord> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/intakes/${encodeURIComponent(id)}/assignment`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    }
+  );
+  const data = await readApiResponse<IntakeRecord>(
+    response,
+    "Could not save the staff assignment. Please try again."
+  );
+  if (!data.id || !Array.isArray(data.assignmentHistory)) {
+    throw new Error("The API returned an unexpected assignment response. Please try again.");
   }
   return data;
 }

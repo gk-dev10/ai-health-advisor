@@ -6,7 +6,14 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.core.config import settings
-from app.core.intake_store import apply_override, create_intake, list_intakes
+from app.core.intake_store import (
+    StaffingCapacityError,
+    apply_override,
+    assign_intake,
+    create_intake,
+    get_staffing_roster,
+    list_intakes,
+)
 from app.core.triage_policy import (
     AI_EMERGENCY_REASON,
     AI_ROUTINE_REASON,
@@ -32,6 +39,8 @@ from app.schemas.intake import (
     IntakeSubmission,
     RoutingSuggestion,
     StaffOverrideRequest,
+    StaffAssignmentRequest,
+    StaffingRosterResponse,
 )
 
 
@@ -218,12 +227,33 @@ def get_intakes(
     return IntakeQueueResponse(intakes=list_intakes(limit))
 
 
+@router.get("/staffing/roster", response_model=StaffingRosterResponse)
+def get_roster() -> StaffingRosterResponse:
+    return get_staffing_roster()
+
+
 @router.patch("/intakes/{request_id}/override", response_model=IntakeRecord)
 def override_intake(
     request_id: str,
     request: StaffOverrideRequest,
 ) -> IntakeRecord:
     record = apply_override(request_id, request.final_category, request.reason)
+    if record is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Intake request not found.")
+    return record
+
+
+@router.patch("/intakes/{request_id}/assignment", response_model=IntakeRecord)
+def assign_intake_to_clinician(
+    request_id: str,
+    request: StaffAssignmentRequest,
+) -> IntakeRecord:
+    try:
+        record = assign_intake(request_id, request)
+    except StaffingCapacityError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
     if record is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Intake request not found.")
     return record

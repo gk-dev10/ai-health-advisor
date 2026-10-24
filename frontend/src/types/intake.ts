@@ -47,8 +47,51 @@ export interface IntakeRecord extends IntakeSubmission {
   finalCategory: RoutingCategory;
   finalAction: string | null;
   overrideReason: string | null;
+  currentAssignment: StaffAssignment | null;
+  assignmentHistory: StaffAssignment[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface StaffAssignment {
+  clinicianId: string;
+  clinicianName: string;
+  role: string;
+  teamId: string;
+  teamName: string;
+  assignedBy: string;
+  reason: string;
+  assignedAt: string;
+}
+
+export interface StaffAssignmentRequest {
+  clinicianId: string;
+  assignedBy: string;
+  reason: string;
+}
+
+export interface DemoClinicianProfile {
+  id: string;
+  name: string;
+  role: string;
+  teamId: string;
+  teamName: string;
+  caseCapacity: number;
+  activeCases: number;
+  openCaseSlots: number;
+}
+
+export interface TeamRouteInfo {
+  category: RoutingCategory;
+  teamId: string;
+  teamName: string;
+  priorityLabel: string;
+}
+
+export interface StaffingRosterResponse {
+  clinicians: DemoClinicianProfile[];
+  teamRoutes: TeamRouteInfo[];
+  demoOnly: boolean;
 }
 
 export interface IntakeQueueResponse {

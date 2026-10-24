@@ -1,10 +1,12 @@
 "use client";
 
-import { Info } from "lucide-react";
+import { ChevronDown, Download, Info } from "lucide-react";
 import type { SelectedBodyPart } from "@/types/body";
+import type { SymptomInterviewAnswers } from "@/types/assessment";
 import { SEVERITY_SCALE, SEVERITY_COLORS } from "@/constants/severityScale";
 import { SeverityCard } from "./SeverityCard";
 import { QueryInput } from "./QueryInput";
+import { GuidedSymptomInterview } from "./GuidedSymptomInterview";
 import { AssessmentSummary } from "./AssessmentSummary";
 import { Button } from "@/components/ui/Button";
 import type { ApiAssessmentResponse } from "@/types/assessment";
@@ -12,8 +14,13 @@ import type { ApiAssessmentResponse } from "@/types/assessment";
 interface AssessmentPanelProps {
   selectedParts: SelectedBodyPart[];
   query: string;
+  interviewAnswers: SymptomInterviewAnswers;
+  onInterviewAnswersChange: (answers: SymptomInterviewAnswers) => void;
   onQueryChange: (value: string) => void;
   onSubmit: () => void;
+  onDownloadSummary: () => void;
+  hasSummaryContent: boolean;
+  summaryExportStatus: string | null;
   isValid: boolean;
   errors: string[];
   isSubmitting: boolean;
@@ -26,8 +33,13 @@ interface AssessmentPanelProps {
 export function AssessmentPanel({
   selectedParts,
   query,
+  interviewAnswers,
+  onInterviewAnswersChange,
   onQueryChange,
   onSubmit,
+  onDownloadSummary,
+  hasSummaryContent,
+  summaryExportStatus,
   isValid,
   errors,
   isSubmitting,
@@ -37,12 +49,23 @@ export function AssessmentPanel({
   submitError,
 }: AssessmentPanelProps) {
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-        <h3 className="mb-3 text-xs font-semibold text-foreground uppercase tracking-wider">
-          Severity Reference
-        </h3>
-        <div className="space-y-2">
+    <div className="space-y-6 rounded-3xl border border-border/90 bg-white p-5 shadow-[0_18px_55px_-38px_rgba(20,43,37,0.38)] sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Step 02 | Your notes</p>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-foreground">Describe what you&apos;re noticing</h2>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">A few details can make your summary easier to review.</p>
+        </div>
+        <span className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+          {selectedParts.length} region{selectedParts.length === 1 ? "" : "s"}
+        </span>
+      </div>
+
+      <details className="group rounded-2xl border border-border/80 bg-muted/45">
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-foreground marker:hidden">
+          <span className="flex items-center justify-between gap-3">Severity guide <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" /></span>
+        </summary>
+        <div className="space-y-2 border-t border-border/80 px-4 py-3">
           {SEVERITY_SCALE.map((level) => {
             const color = SEVERITY_COLORS[level.value];
             return (
@@ -66,19 +89,18 @@ export function AssessmentPanel({
             );
           })}
         </div>
-      </div>
+      </details>
 
       {selectedParts.length === 0 && (
-        <div className="rounded-lg border border-border bg-card p-6 text-center shadow-sm">
-          <p className="text-sm text-muted-foreground">
-            Tap a body region on the 3D model to select it and set its severity.
-          </p>
+        <div className="rounded-2xl border border-dashed border-primary/30 bg-primary-light/35 p-4">
+          <p className="text-sm font-semibold text-foreground">Start by choosing a body region</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Your selected areas and severity will appear here for review.</p>
         </div>
       )}
 
       {selectedParts.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 rounded-lg bg-primary-light/60 px-4 py-3">
+          <div className="flex items-center gap-2 rounded-xl border border-primary/10 bg-primary-light/55 px-4 py-3">
             <Info className="size-4 shrink-0 text-primary" />
             <p className="text-xs text-primary-dark">
               Tap a region on the 3D body to select it. Tap again to increase severity (1–5). Tap at maximum severity to deselect.
@@ -86,7 +108,7 @@ export function AssessmentPanel({
           </div>
 
           <h3 className="text-sm font-semibold text-foreground">
-            Pain Severity Map
+            Selected regions
           </h3>
 
           <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
@@ -99,10 +121,30 @@ export function AssessmentPanel({
 
       <QueryInput value={query} onChange={onQueryChange} />
 
+      <GuidedSymptomInterview value={interviewAnswers} onChange={onInterviewAnswersChange} />
+
       <AssessmentSummary
         selectedParts={selectedParts}
         query={query}
+        interviewAnswers={interviewAnswers}
       />
+
+      <div className="space-y-2">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={onDownloadSummary}
+          disabled={!hasSummaryContent}
+        >
+          <Download className="size-4" aria-hidden="true" />
+          Download visit summary
+        </Button>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Creates a text file on your device with your selected regions, description, optional interview answers, and any guidance received.
+        </p>
+        {summaryExportStatus && <p role="status" className="text-xs text-emerald-800">{summaryExportStatus}</p>}
+      </div>
 
       <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
         <input
@@ -112,7 +154,7 @@ export function AssessmentPanel({
           className="mt-0.5 size-4 shrink-0 accent-primary"
         />
         <span>
-          I understand that my selected body regions and symptom description will be sent to
+          I understand that my selected body regions, symptom description, and any guided interview answers will be sent to
           Google Gemini to generate this guidance. I will not include identifying details.
         </span>
       </label>
@@ -126,7 +168,7 @@ export function AssessmentPanel({
       {result && (
         <section
           aria-live="polite"
-          className="space-y-4 rounded-xl border border-primary/20 bg-card p-5 shadow-sm"
+          className="space-y-4 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary-light/55 to-white p-5 shadow-sm sm:p-6"
         >
           <div>
             <h3 className="text-base font-semibold text-foreground">AI-generated guidance</h3>
@@ -188,7 +230,7 @@ export function AssessmentPanel({
         variant="primary"
         disabled={!isValid || !hasPrivacyConsent || isSubmitting}
         onClick={onSubmit}
-        className="w-full"
+        className="w-full py-4 text-base shadow-lg shadow-primary/20"
       >
         {isSubmitting ? "Generating guidance..." : "Analyze Assessment"}
       </Button>

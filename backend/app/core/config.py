@@ -35,7 +35,7 @@ class Settings:
 
 settings = Settings(
     gemini_api_key=(os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or "").strip(),
-    gemini_model=os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip(),
+    gemini_model=os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip(),
     allowed_origins=_csv_env("FRONTEND_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"),
     triage_db_path=_path_env("TRIAGE_DB_PATH", BACKEND_ROOT / "data" / "intakes.sqlite3"),
 )

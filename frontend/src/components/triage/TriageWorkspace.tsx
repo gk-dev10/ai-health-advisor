@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
 import {
   CalendarDays,
   Check,
   ClipboardList,
   RefreshCw,
   ShieldAlert,
+  UsersRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -17,6 +18,7 @@ import type {
   RequesterUrgency,
   RoutingCategory,
 } from "@/types/intake";
+import { CareCoordinator } from "./CareCoordinator";
 
 type QueueFilter = "all" | RoutingCategory;
 
@@ -287,6 +289,7 @@ function IntakeQueueCard({
 }
 
 export function TriageWorkspace() {
+  const [activeWorkspace, setActiveWorkspace] = useState<"intake" | "care">("intake");
   const [syntheticPatientId, setSyntheticPatientId] = useState("SYN-DEMO-001");
   const [symptomDescription, setSymptomDescription] = useState("");
   const [preferredAppointmentTime, setPreferredAppointmentTime] = useState("Next available");
@@ -389,6 +392,16 @@ export function TriageWorkspace() {
     setLatestIntake((current) => (current?.id === updated.id ? updated : current));
   };
 
+  const handleWorkspaceTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const nextWorkspace = event.key === "Home" || event.key === "ArrowLeft"
+      ? "intake"
+      : "care";
+    setActiveWorkspace(nextWorkspace);
+    document.getElementById(`${nextWorkspace}-tab`)?.focus();
+  };
+
   return (
     <div className="space-y-8">
       <div
@@ -402,7 +415,36 @@ export function TriageWorkspace() {
         </p>
       </div>
 
-      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+      <div role="tablist" aria-orientation="horizontal" aria-label="Clinic workspace" onKeyDown={handleWorkspaceTabKeyDown} className="flex w-fit max-w-full gap-1 rounded-2xl border border-border/80 bg-white p-1.5 shadow-sm">
+        <button
+          id="intake-tab"
+          type="button"
+          role="tab"
+          aria-selected={activeWorkspace === "intake"}
+          tabIndex={activeWorkspace === "intake" ? 0 : -1}
+          aria-controls="intake-panel"
+          onClick={() => setActiveWorkspace("intake")}
+          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${activeWorkspace === "intake" ? "bg-primary text-white shadow-md shadow-primary/20" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+        >
+          <ClipboardList className="size-4" aria-hidden="true" /> Intake & queue
+        </button>
+        <button
+          id="care-tab"
+          type="button"
+          role="tab"
+          aria-selected={activeWorkspace === "care"}
+          tabIndex={activeWorkspace === "care" ? 0 : -1}
+          aria-controls="care-panel"
+          onClick={() => setActiveWorkspace("care")}
+          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${activeWorkspace === "care" ? "bg-primary text-white shadow-md shadow-primary/20" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+        >
+          <UsersRound className="size-4" aria-hidden="true" /> Care coordinator
+        </button>
+      </div>
+
+      <div id="intake-panel" role="tabpanel" aria-labelledby="intake-tab" hidden={activeWorkspace !== "intake"}>
+      {activeWorkspace === "intake" && (
+        <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
         <Card className="space-y-6">
           <div>
             <div className="flex items-center gap-2">
@@ -639,6 +681,11 @@ export function TriageWorkspace() {
             </div>
           </section>
         </div>
+        </div>
+      )}
+      </div>
+      <div id="care-panel" role="tabpanel" aria-labelledby="care-tab" hidden={activeWorkspace !== "care"}>
+        {activeWorkspace === "care" && <CareCoordinator intakes={intakes} onAssigned={handleSavedRecord} />}
       </div>
 
       <Card className="border-primary/15 bg-muted/60">

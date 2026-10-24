@@ -13,7 +13,7 @@ export function QueryInput({ value, onChange }: QueryInputProps) {
   const isUnderMin = value.trim().length < MIN_LENGTH;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <div className="flex items-center justify-between">
         <label
           htmlFor="symptom-query"
@@ -23,12 +23,12 @@ export function QueryInput({ value, onChange }: QueryInputProps) {
         </label>
         <span
           id="query-counter"
-          className={`text-xs ${
+          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
             charCount > MAX_LENGTH
-              ? "text-red-500"
+              ? "bg-red-50 text-red-700"
               : isUnderMin
-                ? "text-muted-foreground"
-                : "text-green-600"
+                ? "bg-muted text-muted-foreground"
+                : "bg-emerald-50 text-emerald-700"
           }`}
         >
           {charCount}/{MAX_LENGTH}
@@ -41,7 +41,7 @@ export function QueryInput({ value, onChange }: QueryInputProps) {
         onChange={(e) => onChange(e.target.value)}
         placeholder="Describe your pain, symptoms, discomfort, or concerns..."
         rows={5}
-        className="w-full resize-y rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+        className="w-full resize-y rounded-2xl border border-border bg-background px-4 py-3.5 text-sm leading-relaxed text-foreground shadow-inner shadow-foreground/[0.015] placeholder:text-muted-foreground/80 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:outline-none"
         aria-describedby="query-hint query-counter"
       />
       <p id="query-hint" className="text-xs text-muted-foreground">

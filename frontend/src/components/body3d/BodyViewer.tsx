@@ -56,7 +56,7 @@ export default function BodyViewer({ onSelectionChange, severities = {}, classNa
       onPointerMove={handlePointerMove}
       className={
         className ??
-        "relative h-full min-h-[420px] w-full overflow-hidden rounded-xl bg-gradient-to-b from-slate-100 to-slate-200"
+        "relative h-full min-h-[420px] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-emerald-50 to-emerald-100"
       }
       role="application"
       aria-label="Interactive 3D human body viewer. Click a body region to select it. Drag to rotate, right-click drag or two-finger drag to pan, scroll to zoom."
@@ -83,7 +83,7 @@ export default function BodyViewer({ onSelectionChange, severities = {}, classNa
         <button
           type="button"
           onClick={handleClearAll}
-          className="absolute bottom-4 right-4 rounded-md bg-white/90 px-3 py-1.5 text-sm font-medium text-slate-700 shadow-md ring-1 ring-slate-200 hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="absolute bottom-4 right-4 rounded-xl bg-white/90 px-4 py-2.5 text-sm font-semibold text-foreground shadow-lg ring-1 ring-border/80 backdrop-blur hover:bg-white focus:outline-none focus:ring-2 focus:ring-primary"
         >
           Clear all ({selectedParts.length})
         </button>

@@ -3,6 +3,12 @@ export interface AssessmentPayload {
   query: string;
 }
 
+export interface SymptomInterviewAnswers {
+  onset?: string;
+  trend?: string;
+  sensation?: string;
+}
+
 export interface AssessmentGuidance {
   summary: string;
   suggestedSteps: string[];

@@ -12,22 +12,23 @@ export const metadata: Metadata = {
 export default function TriagePage() {
   return (
     <>
-      <Section className="bg-gradient-to-b from-primary-light/50 to-background pb-0">
+      <Section className="pb-4 pt-10 sm:pt-14">
         <Container>
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
-              Community clinic demo
+          <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-[#123b32] px-6 py-8 text-center text-white shadow-[0_28px_80px_-38px_rgba(18,59,50,0.65)] sm:px-10 sm:py-10">
+            <div className="pointer-events-none absolute -right-10 -top-28 size-72 rounded-full border border-white/10" />
+            <p className="relative text-xs font-bold uppercase tracking-[0.2em] text-emerald-200">
+              Community clinic · demo workspace
             </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+            <h1 className="relative mt-3 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
               Clinic Intake Triage
             </h1>
-            <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+            <p className="relative mx-auto mt-4 max-w-2xl text-sm leading-7 text-emerald-50/80 sm:text-base">
               Organize synthetic appointment requests for staff review with transparent routing suggestions and human override.
             </p>
           </div>
         </Container>
       </Section>
-      <Section className="pt-8">
+      <Section className="pt-5 sm:pt-7">
         <Container>
           <TriageWorkspace />
         </Container>
